@@ -1036,66 +1036,84 @@
     <div id="page-feed" class="page" style="display:none">
       <div class="page-title">Find Tasks</div>
 
-      <!-- FILTERS -->
-      <div style="background:var(--white); border-radius:16px; padding:16px; border:1px solid var(--border); margin-bottom:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span style="font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--mid);">Filters</span>
-          <button onclick="clearFilters()" style="font-size:12px; font-weight:600; color:var(--orange); border:none; background:none; cursor:pointer; font-family:'Inter',sans-serif;">Clear all</button>
+      <!-- FILTER BAR -->
+      <div style="margin-bottom:16px;">
+
+        <!-- ACTIVE FILTER PILLS + FILTER BUTTON ROW -->
+        <div style="display:flex; gap:8px; align-items:center; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;">
+          <button onclick="toggleFilterPanel()" id="filter-toggle-btn"
+            style="display:flex; align-items:center; gap:6px; padding:9px 16px; border:1.5px solid var(--border); border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif; white-space:nowrap; flex-shrink:0; transition:all 0.2s;">
+            <span>⚙️</span> <span id="filter-btn-label">Filter</span>
+          </button>
+          <div id="active-filter-pills" style="display:flex; gap:6px; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;"></div>
         </div>
 
-        <!-- CATEGORY -->
-        <div style="margin-bottom:12px;">
-          <div style="font-size:12px; font-weight:600; color:var(--mid); margin-bottom:8px;">Category</div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-cats">
-            <div class="fchip active" onclick="toggleCatFilter(this,'')">All</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Cleaning')">🧹 Clean</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Shopping')">🛒 Shop</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Repairs')">🔧 Fix</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Moving')">📦 Move</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Pets')">🐕 Pets</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Wait in Line')">🕐 Wait</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Furniture')">🪑 Furniture</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Errands')">🚗 Errands</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Tech Help')">💻 Tech</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Pest Control')">🪳 Pest</div>
-            <div class="fchip" onclick="toggleCatFilter(this,'Other')">✨ Other</div>
+        <!-- EXPANDABLE FILTER PANEL -->
+        <div id="filter-panel" style="display:none; background:var(--white); border-radius:16px; padding:20px; border:1px solid var(--border); margin-top:10px; animation:fadeIn 0.2s ease;">
+
+          <!-- CATEGORY -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">Category</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-cats">
+              <div class="fchip active" onclick="toggleCatFilter(this,'')">All</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Cleaning')">🧹 Cleaning</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Shopping')">🛒 Shopping</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Repairs')">🔧 Repairs</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Moving')">📦 Moving</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Pets')">🐕 Pets</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Wait in Line')">🕐 Wait in line</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Furniture')">🪑 Furniture</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Errands')">🚗 Errands</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Tech Help')">💻 Tech</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Pest Control')">🪳 Pest</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Other')">✨ Other</div>
+            </div>
           </div>
-        </div>
 
-        <!-- PRICE RANGE -->
-        <div style="margin-bottom:12px;">
-          <div style="font-size:12px; font-weight:600; color:var(--mid); margin-bottom:8px;">Min. Price</div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-prices">
-            <div class="fchip active" onclick="togglePriceFilter(this,0)">Any</div>
-            <div class="fchip" onclick="togglePriceFilter(this,50)">₪50+</div>
-            <div class="fchip" onclick="togglePriceFilter(this,100)">₪100+</div>
-            <div class="fchip" onclick="togglePriceFilter(this,200)">₪200+</div>
-            <div class="fchip" onclick="togglePriceFilter(this,300)">₪300+</div>
+          <div style="height:1px; background:var(--border); margin-bottom:16px;"></div>
+
+          <!-- PRICE + DATE ROW -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">Min. Price</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-prices">
+                <div class="fchip active" onclick="togglePriceFilter(this,0)">Any</div>
+                <div class="fchip" onclick="togglePriceFilter(this,50)">₪50+</div>
+                <div class="fchip" onclick="togglePriceFilter(this,100)">₪100+</div>
+                <div class="fchip" onclick="togglePriceFilter(this,200)">₪200+</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">Posted</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-dates">
+                <div class="fchip active" onclick="toggleDateFilter(this,0)">Any</div>
+                <div class="fchip" onclick="toggleDateFilter(this,1)">Today</div>
+                <div class="fchip" onclick="toggleDateFilter(this,3)">3 days</div>
+                <div class="fchip" onclick="toggleDateFilter(this,7)">Week</div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- DISTRICT -->
-        <div style="margin-bottom:12px;">
-          <div style="font-size:12px; font-weight:600; color:var(--mid); margin-bottom:8px;">District</div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-districts">
-            <div class="fchip active" onclick="toggleDistrictFilter(this,'')">All</div>
-            <div class="fchip" onclick="toggleDistrictFilter(this,'Tel Aviv')">Tel Aviv</div>
-            <div class="fchip" onclick="toggleDistrictFilter(this,'Central')">Central</div>
-            <div class="fchip" onclick="toggleDistrictFilter(this,'Jerusalem')">Jerusalem</div>
-            <div class="fchip" onclick="toggleDistrictFilter(this,'Haifa')">Haifa</div>
-            <div class="fchip" onclick="toggleDistrictFilter(this,'Northern')">North</div>
-            <div class="fchip" onclick="toggleDistrictFilter(this,'Southern')">South</div>
+          <div style="height:1px; background:var(--border); margin-bottom:16px;"></div>
+
+          <!-- DISTRICT -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">District</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-districts">
+              <div class="fchip active" onclick="toggleDistrictFilter(this,'')">All</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Tel Aviv')">Tel Aviv</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Central')">Central</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Jerusalem')">Jerusalem</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Haifa')">Haifa</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Northern')">North</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Southern')">South</div>
+            </div>
           </div>
-        </div>
 
-        <!-- DATE -->
-        <div>
-          <div style="font-size:12px; font-weight:600; color:var(--mid); margin-bottom:8px;">Posted within</div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-dates">
-            <div class="fchip active" onclick="toggleDateFilter(this,0)">Any time</div>
-            <div class="fchip" onclick="toggleDateFilter(this,1)">Today</div>
-            <div class="fchip" onclick="toggleDateFilter(this,3)">3 days</div>
-            <div class="fchip" onclick="toggleDateFilter(this,7)">This week</div>
+          <!-- CLEAR + APPLY -->
+          <div style="display:flex; gap:10px;">
+            <button onclick="clearFilters()" style="flex:1; padding:12px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif;">Clear all</button>
+            <button onclick="toggleFilterPanel()" style="flex:2; padding:12px; background:var(--black); color:var(--white); border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif;">Done</button>
           </div>
         </div>
       </div>
@@ -1558,10 +1576,44 @@
   let filterDistrict = '';
   let filterDays = 0;
 
+  function toggleFilterPanel() {
+    const panel = document.getElementById('filter-panel');
+    const btn = document.getElementById('filter-toggle-btn');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    btn.style.background = isOpen ? 'var(--white)' : 'var(--black)';
+    btn.style.color = isOpen ? 'var(--black)' : 'var(--white)';
+    btn.style.borderColor = isOpen ? 'var(--border)' : 'var(--black)';
+  }
+
+  function updateActivePills() {
+    const pills = document.getElementById('active-filter-pills');
+    if (!pills) return;
+    pills.innerHTML = '';
+    const activeFilters = [];
+    if (filterCat) activeFilters.push({ label: filterCat, clear: () => { filterCat = ''; document.querySelectorAll('#filter-cats .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+    if (filterPrice > 0) activeFilters.push({ label: '₪'+filterPrice+'+', clear: () => { filterPrice = 0; document.querySelectorAll('#filter-prices .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+    if (filterDistrict) activeFilters.push({ label: filterDistrict, clear: () => { filterDistrict = ''; document.querySelectorAll('#filter-districts .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+    if (filterDays > 0) activeFilters.push({ label: filterDays === 1 ? 'Today' : filterDays+'d', clear: () => { filterDays = 0; document.querySelectorAll('#filter-dates .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+
+    activeFilters.forEach(f => {
+      const pill = document.createElement('div');
+      pill.style.cssText = 'display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--black); color:var(--white); border-radius:100px; font-size:12px; font-weight:700; white-space:nowrap; flex-shrink:0; cursor:pointer;';
+      pill.innerHTML = f.label + ' ✕';
+      pill.onclick = f.clear;
+      pills.appendChild(pill);
+    });
+
+    // Update button label
+    const btn = document.getElementById('filter-btn-label');
+    if (btn) btn.textContent = activeFilters.length > 0 ? `Filter (${activeFilters.length})` : 'Filter';
+  }
+
   function toggleCatFilter(el, val) {
     document.querySelectorAll('#filter-cats .fchip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     filterCat = val;
+    updateActivePills();
     loadFeed();
   }
 
@@ -1569,6 +1621,7 @@
     document.querySelectorAll('#filter-prices .fchip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     filterPrice = val;
+    updateActivePills();
     loadFeed();
   }
 
@@ -1576,6 +1629,7 @@
     document.querySelectorAll('#filter-districts .fchip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     filterDistrict = val;
+    updateActivePills();
     loadFeed();
   }
 
@@ -1583,6 +1637,7 @@
     document.querySelectorAll('#filter-dates .fchip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     filterDays = val;
+    updateActivePills();
     loadFeed();
   }
 
@@ -1592,6 +1647,7 @@
     document.querySelectorAll('#filter-prices .fchip').forEach((c,i) => c.classList.toggle('active', i===0));
     document.querySelectorAll('#filter-districts .fchip').forEach((c,i) => c.classList.toggle('active', i===0));
     document.querySelectorAll('#filter-dates .fchip').forEach((c,i) => c.classList.toggle('active', i===0));
+    updateActivePills();
     loadFeed();
   }
 
