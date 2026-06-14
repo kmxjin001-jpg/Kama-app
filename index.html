@@ -780,6 +780,13 @@
         <input type="email" id="signup-email" placeholder="you@email.com">
       </div>
       <div class="form-group">
+        <label>Phone number</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" value="+972" style="width:72px; flex-shrink:0; background:var(--gray); color:var(--mid);" readonly>
+          <input type="tel" id="signup-phone" placeholder="050 000 0000" style="flex:1;">
+        </div>
+      </div>
+      <div class="form-group">
         <label>Password</label>
         <input type="password" id="signup-password" placeholder="Min. 6 characters">
       </div>
@@ -882,14 +889,17 @@
       <div class="card">
         <div class="card-title">Category</div>
         <div class="cat-grid">
-          <div class="cat-btn selected" onclick="selectCat(this,'🪳','Pest Control')"><span class="cat-emoji">🪳</span><span class="cat-label">Pest</span></div>
-          <div class="cat-btn" onclick="selectCat(this,'🧹','Cleaning')"><span class="cat-emoji">🧹</span><span class="cat-label">Clean</span></div>
+          <div class="cat-btn selected" onclick="selectCat(this,'🧹','Cleaning')"><span class="cat-emoji">🧹</span><span class="cat-label">Clean</span></div>
           <div class="cat-btn" onclick="selectCat(this,'🛒','Shopping')"><span class="cat-emoji">🛒</span><span class="cat-label">Shop</span></div>
           <div class="cat-btn" onclick="selectCat(this,'🔧','Repairs')"><span class="cat-emoji">🔧</span><span class="cat-label">Fix</span></div>
           <div class="cat-btn" onclick="selectCat(this,'📦','Moving')"><span class="cat-emoji">📦</span><span class="cat-label">Move</span></div>
           <div class="cat-btn" onclick="selectCat(this,'🐕','Pets')"><span class="cat-emoji">🐕</span><span class="cat-label">Pets</span></div>
           <div class="cat-btn" onclick="selectCat(this,'🕐','Wait in Line')"><span class="cat-emoji">🕐</span><span class="cat-label">Wait</span></div>
           <div class="cat-btn" onclick="selectCat(this,'🪑','Furniture')"><span class="cat-emoji">🪑</span><span class="cat-label">Furniture</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🚗','Errands')"><span class="cat-emoji">🚗</span><span class="cat-label">Errands</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'👶','Childcare')"><span class="cat-emoji">👶</span><span class="cat-label">Childcare</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'💻','Tech Help')"><span class="cat-emoji">💻</span><span class="cat-label">Tech</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🪳','Pest Control')"><span class="cat-emoji">🪳</span><span class="cat-label">Pest</span></div>
           <div class="cat-btn" onclick="selectCat(this,'✨','Other')"><span class="cat-emoji">✨</span><span class="cat-label">Other</span></div>
         </div>
       </div>
@@ -898,15 +908,72 @@
         <div class="card-title">Details</div>
         <div class="form-group">
           <label>Title</label>
-          <input type="text" id="task-title" placeholder="e.g. Catch a cockroach in my bathroom" maxlength="80">
+          <input type="text" id="task-title" placeholder="e.g. Deep clean my apartment" maxlength="80">
         </div>
         <div class="form-group">
           <label>Description <span style="font-weight:400; color:var(--mid)">(optional)</span></label>
-          <textarea id="task-desc" placeholder="Any extra details..."></textarea>
+          <textarea id="task-desc" placeholder="Any extra details, specific requirements..."></textarea>
         </div>
         <div class="form-group">
-          <label>Location</label>
-          <input type="text" id="task-location" placeholder="Neighborhood or address">
+          <label>Photos <span style="font-weight:400; color:var(--mid)">(optional, max 4)</span></label>
+          <div id="photo-upload-area" style="border:2px dashed var(--border); border-radius:12px; padding:20px; text-align:center; cursor:pointer; background:var(--gray); transition:all 0.2s;" onclick="document.getElementById('photo-input').click()">
+            <div style="font-size:28px; margin-bottom:6px;">📸</div>
+            <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Tap to add photos</div>
+            <div style="font-size:12px; color:var(--mid);">Helps helpers understand the task</div>
+            <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+          </div>
+          <div id="photo-previews" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Location</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label>District</label>
+            <select id="task-district" onchange="updateTaskCities()">
+              <option value="" disabled selected>Select...</option>
+              <option>Tel Aviv District</option>
+              <option>Central District</option>
+              <option>Jerusalem District</option>
+              <option>Haifa District</option>
+              <option>Northern District</option>
+              <option>Southern District</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <select id="task-city" disabled>
+              <option value="" disabled selected>District first...</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Street</label>
+          <input type="text" id="task-street" placeholder="e.g. Rothschild Blvd">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label>No.</label>
+            <input type="text" id="task-street-no" placeholder="42">
+          </div>
+          <div class="form-group">
+            <label>Floor</label>
+            <input type="text" id="task-floor" placeholder="3">
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="task-type">
+              <option value="Apartment">Apartment</option>
+              <option value="House">House</option>
+              <option value="Work">Work</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Name / Buzzer <span style="font-weight:400; color:var(--mid)">(optional)</span></label>
+          <input type="text" id="task-name-buzzer" placeholder="e.g. Kim, Apt 5B">
         </div>
       </div>
 
@@ -926,11 +993,22 @@
           </div>
         </div>
         <div class="form-group" style="margin-top:20px">
-          <label>When?</label>
-          <div class="urgency-row">
-            <div class="urg-btn selected" onclick="selectUrgency(this,'ASAP')"><div class="urg-icon">🔥</div><span class="urg-label">Right now</span></div>
-            <div class="urg-btn" onclick="selectUrgency(this,'Today')"><div class="urg-icon">📅</div><span class="urg-label">Today</span></div>
-            <div class="urg-btn" onclick="selectUrgency(this,'This week')"><div class="urg-icon">🗓️</div><span class="urg-label">This week</span></div>
+          <label>When do you need it?</label>
+          <div class="urgency-row" style="margin-bottom:12px;">
+            <div class="urg-btn selected" onclick="selectUrgency(this,'ASAP'); document.getElementById('task-datetime-wrap').style.display='none'"><div class="urg-icon">🔥</div><span class="urg-label">Right now</span></div>
+            <div class="urg-btn" onclick="selectUrgency(this,'Scheduled'); document.getElementById('task-datetime-wrap').style.display='block'"><div class="urg-icon">📅</div><span class="urg-label">Pick date & time</span></div>
+          </div>
+          <div id="task-datetime-wrap" style="display:none;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="task-date" min="">
+              </div>
+              <div class="form-group">
+                <label>Time</label>
+                <input type="time" id="task-time">
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -979,15 +1057,68 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Account</div>
-        <div style="font-size:14px; color:var(--mid); line-height:1.8;">
-          <div>📧 <span id="profile-email">—</span></div>
-          <div>📍 <span id="profile-city2">—</span></div>
-          <div>🎭 Role: <span id="profile-role2">—</span></div>
+        <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Account Details</span>
+          <button onclick="toggleEditProfile()" id="edit-profile-btn" style="padding:6px 14px; border:1.5px solid var(--border); border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif; transition:all 0.2s;">✏️ Edit</button>
+        </div>
+
+        <!-- VIEW MODE -->
+        <div id="profile-view">
+          <div style="font-size:14px; line-height:2; color:var(--mid);">
+            <div>👤 <span id="profile-name-view">—</span></div>
+            <div>📧 <span id="profile-email">—</span></div>
+            <div>📱 <span id="profile-phone-view">—</span></div>
+            <div>📍 <span id="profile-city2">—</span></div>
+            <div>🎭 Role: <span id="profile-role2">—</span></div>
+          </div>
+        </div>
+
+        <!-- EDIT MODE -->
+        <div id="profile-edit" style="display:none;">
+          <div class="form-group">
+            <label>Full name</label>
+            <input type="text" id="edit-name" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" value="+972" style="width:72px; flex-shrink:0; background:var(--gray); color:var(--mid);" readonly>
+              <input type="tel" id="edit-phone" placeholder="050 000 0000" style="flex:1;">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>District</label>
+            <select id="edit-district" onchange="updateEditCities()">
+              <option value="" disabled selected>Select...</option>
+              <option>Tel Aviv District</option>
+              <option>Central District</option>
+              <option>Jerusalem District</option>
+              <option>Haifa District</option>
+              <option>Northern District</option>
+              <option>Southern District</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <select id="edit-city" disabled>
+              <option value="" disabled selected>Select district first...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="edit-role">
+              <option value="poster">Task Poster</option>
+              <option value="helper">Kama Helper</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button onclick="toggleEditProfile()" style="flex:1; padding:12px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif;">Cancel</button>
+            <button onclick="saveProfile()" style="flex:2; padding:12px; background:var(--black); color:var(--white); border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:all 0.2s;">Save Changes</button>
+          </div>
         </div>
       </div>
 
-      <button class="btn-primary" style="background:var(--black);" onclick="handleSignout()">Sign Out</button>
+      <button class="btn-primary" style="background:var(--black); margin-top:8px;" onclick="handleSignout()">Sign Out</button>
     </div>
 
   </div>
@@ -1092,8 +1223,9 @@
 
     if (data.user) {
       // Store signup data in localStorage to create profile after email confirmation
+      const phone = document.getElementById('signup-phone')?.value || '';
       localStorage.setItem('kama_pending_profile', JSON.stringify({
-        name, email, city,
+        name, email, city, phone,
         role: selectedRole
       }));
       showSuccess('Account created! Check your email to confirm, then log in.');
@@ -1119,6 +1251,7 @@
         id: currentUser.id,
         name: profileData.name,
         email: currentUser.email,
+        phone: profileData.phone || '',
         city: profileData.city || 'Tel Aviv',
         role: profileData.role,
         rating: 0,
@@ -1151,6 +1284,10 @@
     document.getElementById('profile-role2').textContent = currentProfile.role || '—';
     document.getElementById('profile-tasks').textContent = currentProfile.tasks_completed || 0;
     document.getElementById('profile-rating').textContent = currentProfile.rating > 0 ? currentProfile.rating.toFixed(1) + '★' : '—';
+    const nameView = document.getElementById('profile-name-view');
+    if (nameView) nameView.textContent = name;
+    const phoneView = document.getElementById('profile-phone-view');
+    if (phoneView) phoneView.textContent = currentProfile.phone ? '+972 ' + currentProfile.phone : '—';
   }
 
   // ─── SCREENS ───
@@ -1159,6 +1296,25 @@
     document.getElementById('screen-app').classList.add('active');
     goToPage('home');
     loadHomeActivity();
+    prefillLocation();
+  }
+
+  function prefillLocation() {
+    if (!currentProfile) return;
+    // Try to match city to district
+    const districtSelect = document.getElementById('task-district');
+    if (!districtSelect) return;
+    for (const [district, cities] of Object.entries(cityData)) {
+      if (cities.includes(currentProfile.city)) {
+        districtSelect.value = district;
+        updateTaskCities();
+        setTimeout(() => {
+          const citySelect = document.getElementById('task-city');
+          if (citySelect) citySelect.value = currentProfile.city;
+        }, 100);
+        break;
+      }
+    }
   }
 
   function showAuth() {
@@ -1201,10 +1357,27 @@
   }
 
   // ─── POST TASK ───
+  const catPlaceholders = {
+    'Cleaning': 'e.g. Deep clean my kitchen and bathroom',
+    'Shopping': 'e.g. Pick up groceries from Rami Levy',
+    'Repairs': 'e.g. Fix leaking tap in bathroom',
+    'Moving': 'e.g. Help move boxes to 3rd floor',
+    'Pets': 'e.g. Walk my golden retriever for 45 min',
+    'Wait in Line': 'e.g. Wait at the post office for me',
+    'Furniture': 'e.g. Assemble IKEA PAX wardrobe',
+    'Errands': 'e.g. Drop off a package at the post office',
+    'Childcare': 'e.g. Babysit for 2 hours this evening',
+    'Tech Help': 'e.g. Set up my new printer',
+    'Pest Control': 'e.g. There is a cockroach in my bathroom',
+    'Other': 'e.g. Describe what you need done'
+  };
+
   function selectCat(el, emoji, label) {
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
     el.classList.add('selected');
     selectedCat = { emoji, label };
+    const titleInput = document.getElementById('task-title');
+    if (titleInput) titleInput.placeholder = catPlaceholders[label] || 'e.g. Describe your task';
   }
 
   function selectUrgency(el, val) {
@@ -1219,15 +1392,63 @@
     event.target.classList.add('selected');
   }
 
+  function handlePhotos(event) {
+    const files = Array.from(event.target.files).slice(0, 4);
+    const container = document.getElementById('photo-previews');
+    container.innerHTML = '';
+    files.forEach((file, i) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'position:relative; width:70px; height:70px;';
+        div.innerHTML = `<img src="${e.target.result}" style="width:70px;height:70px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
+          <button onclick="this.parentNode.remove()" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,0.6);color:white;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+        container.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updateTaskCities() {
+    const district = document.getElementById('task-district').value;
+    const citySelect = document.getElementById('task-city');
+    citySelect.disabled = false;
+    citySelect.innerHTML = '<option value="" disabled selected>Select city...</option>';
+    if (cityData[district]) {
+      cityData[district].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+    }
+  }
+
   async function submitTask() {
     const title = document.getElementById('task-title').value.trim();
     const desc = document.getElementById('task-desc').value.trim();
-    const location = document.getElementById('task-location').value.trim();
+    const district = document.getElementById('task-district').value;
+    const city = document.getElementById('task-city').value;
+    const street = document.getElementById('task-street').value.trim();
+    const streetNo = document.getElementById('task-street-no').value.trim();
+    const floor = document.getElementById('task-floor').value.trim();
+    const type = document.getElementById('task-type').value;
+    const nameBuzzer = document.getElementById('task-name-buzzer').value.trim();
     const price = parseFloat(document.getElementById('task-price').value);
+
+    const locationParts = [city || district, street, streetNo, floor ? `Floor ${floor}` : '', type, nameBuzzer].filter(Boolean);
+    const location = locationParts.join(', ') || district;
 
     if (!title) return showToast('Please add a title', 'error');
     if (!price || price < 10) return showToast('Minimum price is ₪10', 'error');
-    if (!location) return showToast('Please add a location', 'error');
+    if (!district) return showToast('Please select a district', 'error');
+
+    let urgencyText = selectedUrgency;
+    if (selectedUrgency === 'Scheduled') {
+      const date = document.getElementById('task-date').value;
+      const time = document.getElementById('task-time').value;
+      if (date) urgencyText = `${date}${time ? ' at ' + time : ''}`;
+    }
 
     const { error } = await sb.from('tasks').insert({
       poster_id: currentUser.id,
@@ -1235,7 +1456,7 @@
       description: desc,
       category: selectedCat.label,
       price,
-      urgency: selectedUrgency,
+      urgency: urgencyText,
       location,
       status: 'live'
     });
@@ -1383,6 +1604,65 @@
     setTimeout(() => toast.classList.remove('show'), 3000);
   }
 
+  // ─── PROFILE EDIT ───
+  function toggleEditProfile() {
+    const view = document.getElementById('profile-view');
+    const edit = document.getElementById('profile-edit');
+    const btn = document.getElementById('edit-profile-btn');
+    const isEditing = edit.style.display === 'block';
+    if (isEditing) {
+      view.style.display = 'block';
+      edit.style.display = 'none';
+      btn.textContent = '✏️ Edit';
+    } else {
+      view.style.display = 'none';
+      edit.style.display = 'block';
+      btn.textContent = '✕ Cancel';
+      // Pre-fill edit fields
+      document.getElementById('edit-name').value = currentProfile?.name || '';
+      document.getElementById('edit-phone').value = currentProfile?.phone || '';
+      document.getElementById('edit-role').value = currentProfile?.role || 'poster';
+      // Pre-fill district/city
+      if (currentProfile?.city) {
+        for (const [district, cities] of Object.entries(cityData)) {
+          if (cities.includes(currentProfile.city)) {
+            document.getElementById('edit-district').value = district;
+            updateEditCities();
+            setTimeout(() => { document.getElementById('edit-city').value = currentProfile.city; }, 100);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  function updateEditCities() {
+    const district = document.getElementById('edit-district').value;
+    const citySelect = document.getElementById('edit-city');
+    citySelect.disabled = false;
+    citySelect.innerHTML = '<option value="" disabled selected>Select city...</option>';
+    if (cityData[district]) {
+      cityData[district].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city; opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+    }
+  }
+
+  async function saveProfile() {
+    const name = document.getElementById('edit-name').value.trim();
+    const phone = document.getElementById('edit-phone').value.trim();
+    const city = document.getElementById('edit-city').value;
+    const role = document.getElementById('edit-role').value;
+    if (!name) return showToast('Name is required', 'error');
+    const { error } = await sb.from('users').update({ name, phone, city, role }).eq('id', currentUser.id);
+    if (error) return showToast('Error saving', 'error');
+    await loadProfile();
+    toggleEditProfile();
+    showToast('Profile updated! ✅', 'success');
+  }
+
   // ─── CITY DATA ───
   const cityData = {
     'Tel Aviv District': [
@@ -1433,6 +1713,13 @@
 
   // Also add region/city to post task location
   // ─── START ───
+  // Set min date to today
+  const dateInput = document.getElementById('task-date');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
+  }
   init();
 </script>
 
