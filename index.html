@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kama — Get it done</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --yellow: #FFD600;
+    --orange: #FF5C00;
+    --black: #0D0D0D;
+    --white: #FFFFFF;
+    --gray: #F5F5F0;
+    --mid: #6B6B6B;
+    --border: #E8E8E8;
+    --success: #34C759;
+    --error: #FF3B30;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--gray);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* AUTH SCREEN */
+  #screen-auth {
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    background: var(--yellow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #screen-auth::before {
+    content: 'כמה?';
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 200px;
+    font-weight: 800;
+    color: rgba(0,0,0,0.05);
+    pointer-events: none;
+  }
+
+  .auth-card {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 40px 36px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.12);
+  }
+
+  .auth-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+  }
+
+  .auth-logo span { color: var(--orange); }
+
+  .auth-sub {
+    font-size: 15px;
+    color: var(--mid);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--gray);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    border-radius: 9px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    color: var(--mid);
+    transition: all 0.2s;
+  }
+
+  .auth-tab.active { background: var(--white); color: var(--black); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  .form-group { margin-bottom: 16px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--black);
+  }
+
+  input, select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--black);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+
+  input:focus, select:focus { border-color: var(--black); }
+
+  .role-select-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .role-opt {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .role-opt:hover { border-color: var(--orange); }
+  .role-opt.selected { border-color: var(--orange); background: #FFF5F0; }
+  .role-opt-icon { font-size: 28px; margin-bottom: 6px; }
+  .role-opt-label { font-size: 13px; font-weight: 700; }
+  .role-opt-sub { font-size: 11px; color: var(--mid); margin-top: 2px; }
+
+  .btn-auth {
+    width: 100%;
+    padding: 15px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-auth:hover { background: var(--orange); }
+
+  .auth-error {
+    background: #FFE5E5;
+    color: var(--error);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .auth-success {
+    background: #E5FFE5;
+    color: var(--success);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* NAV */
+  .app-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--black);
+  }
+
+  .nav-logo span { color: var(--orange); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-avatar {
+    width: 36px;
+    height: 36px;
+    background: var(--yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .btn-signout {
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    color: var(--mid);
+  }
+
+  .btn-signout:hover { border-color: var(--error); color: var(--error); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    display: flex;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 8px 0 12px;
+  }
+
+  .bnav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .bnav-icon { font-size: 22px; }
+  .bnav-label { font-size: 10px; font-weight: 600; color: var(--mid); }
+  .bnav-item.active .bnav-label { color: var(--orange); }
+  .bnav-item.active .bnav-icon { filter: none; }
+
+  /* MAIN CONTENT */
+  .app-content {
+    flex: 1;
+    padding: 24px 20px 90px;
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* PAGE TITLE */
+  .page-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 6px;
+  }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--mid);
+    margin-bottom: 24px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 16px;
+  }
+
+  /* HOME SCREEN */
+  .welcome-card {
+    background: var(--black);
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 14px;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-card::after {
+    content: '⚡';
+    position: absolute;
+    right: 20px;
+    bottom: -10px;
+    font-size: 80px;
+    opacity: 0.1;
+  }
+
+  .welcome-greeting {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .welcome-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .welcome-stats {
+    display: flex;
+    gap: 24px;
+  }
+
+  .wstat-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--yellow);
+    letter-spacing: -1px;
+  }
+
+  .wstat-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  /* QUICK ACTIONS */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .qa-btn {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .qa-btn:hover { border-color: var(--orange); transform: translateY(-2px); }
+  .qa-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .qa-label { font-size: 14px; font-weight: 700; display: block; margin-bottom: 3px; }
+  .qa-sub { font-size: 12px; color: var(--mid); }
+
+  /* POST TASK FORM */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .cat-btn {
+    border: 2px solid var(--border);
+    background: var(--white);
+    border-radius: 12px;
+    padding: 12px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .cat-btn:hover { border-color: var(--orange); }
+  .cat-btn.selected { border-color: var(--orange); background: #FFF5F0; }
+  .cat-emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+  .cat-label { font-size: 10px; font-weight: 600; }
+
+  textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--black);
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  textarea:focus { border-color: var(--black); }
+
+  .price-wrap { position: relative; }
+  .price-sym { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; font-weight: 700; color: var(--mid); }
+  .price-wrap input { padding-left: 36px; font-size: 22px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; }
+
+  .price-chips {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pchip {
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--white);
+    transition: all 0.2s;
+  }
+
+  .pchip:hover, .pchip.selected { background: var(--orange); color: var(--white); border-color: var(--orange); }
+
+  .urgency-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .urg-btn {
+    border: 2px solid var(--border);
+    background: var(--white);
+    border-radius: 12px;
+    padding: 14px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .urg-btn:hover { border-color: var(--black); }
+  .urg-btn.selected { border-color: var(--orange); background: #FFF5F0; }
+  .urg-icon { font-size: 20px; margin-bottom: 4px; }
+  .urg-label { font-size: 12px; font-weight: 700; display: block; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 15px;
+    background: var(--orange);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+    margin-top: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,92,0,0.3); }
+  .btn-primary:disabled { background: var(--border); color: var(--mid); transform: none; box-shadow: none; cursor: not-allowed; }
+
+  /* TASK CARDS IN FEED */
+  .task-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .task-card:hover { border-color: var(--black); transform: translateY(-1px); }
+  .task-card.urgent { border-left: 4px solid var(--error); }
+
+  .task-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .task-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge-cat { background: var(--gray); }
+  .badge-urgent { background: #FFE5E5; color: var(--error); }
+  .badge-new { background: #E5FFE5; color: #1A7A1A; }
+
+  .task-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .task-meta {
+    font-size: 13px;
+    color: var(--mid);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .task-price {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-accept {
+    flex: 1;
+    padding: 11px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-accept:hover { background: var(--orange); }
+
+  .btn-skip {
+    padding: 11px 18px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    color: var(--mid);
+    transition: all 0.2s;
+  }
+
+  .btn-skip:hover { border-color: var(--mid); }
+
+  /* MY TASKS */
+  .mytask-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    padding: 20px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .status-live { background: var(--orange); }
+  .status-matched { background: var(--success); }
+  .status-completed { background: var(--mid); }
+
+  /* PROFILE */
+  .profile-hero {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    text-align: center;
+    margin-bottom: 14px;
+  }
+
+  .profile-avatar-big {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 auto 16px;
+  }
+
+  .profile-name-big {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .profile-role {
+    font-size: 13px;
+    color: var(--mid);
+    margin-bottom: 16px;
+  }
+
+  .profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+  }
+
+  .pstat-val { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+  .pstat-label { font-size: 11px; color: var(--mid); margin-top: 2px; }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--mid);
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--mid);
+  }
+
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--black); margin-bottom: 6px; }
+  .empty-sub { font-size: 14px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--black);
+    color: var(--white);
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--error); }
+
+  @media (min-width: 768px) {
+    .app-content { padding: 32px 24px 90px; }
+    .cat-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- AUTH SCREEN -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-card">
+    <div class="auth-logo">Kama<span>.</span></div>
+    <div class="auth-sub">Get anything done — name your price.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Log in</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Sign up</button>
+    </div>
+
+    <div id="auth-error" class="auth-error"></div>
+    <div id="auth-success" class="auth-success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Your password">
+      </div>
+      <button class="btn-auth" onclick="handleLogin()">Log in →</button>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signup-form" style="display:none">
+      <div class="form-group">
+        <label>Full name</label>
+        <input type="text" id="signup-name" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="you@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Min. 6 characters">
+      </div>
+      <div class="form-group">
+        <label>I want to...</label>
+        <div class="role-select-row">
+          <div class="role-opt selected" onclick="selectRole('poster', this)">
+            <div class="role-opt-icon">📋</div>
+            <div class="role-opt-label">Post Tasks</div>
+            <div class="role-opt-sub">I need help</div>
+          </div>
+          <div class="role-opt" onclick="selectRole('helper', this)">
+            <div class="role-opt-icon">⚡</div>
+            <div class="role-opt-label">Be a Helper</div>
+            <div class="role-opt-sub">I want to earn</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Region</label>
+        <select id="signup-region" onchange="updateCities()">
+          <option value="" disabled selected>Select region...</option>
+          <option value="Tel Aviv District">📍 Tel Aviv District</option>
+          <option value="Central District">📍 Central District</option>
+          <option value="Jerusalem District">📍 Jerusalem District</option>
+          <option value="Haifa District">📍 Haifa District</option>
+          <option value="Northern District">📍 Northern District</option>
+          <option value="Southern District">📍 Southern District</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>City</label>
+        <select id="signup-city" disabled>
+          <option value="" disabled selected>Select region first...</option>
+        </select>
+      </div>
+      <button class="btn-auth" onclick="handleSignup()">Create account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP SCREEN -->
+<div class="screen" id="screen-app">
+
+  <!-- NAV -->
+  <div class="app-nav">
+    <div class="nav-logo" onclick="goToPage('home')" style="cursor:pointer; user-select:none;">Kama<span>.</span></div>
+    <div class="nav-right">
+      <button class="btn-signout" onclick="handleSignout()">Sign out</button>
+      <div class="nav-avatar" id="nav-avatar" onclick="goToPage('profile')" style="cursor:pointer; user-select:none;">J</div>
+    </div>
+  </div>
+
+  <!-- CONTENT PAGES -->
+  <div class="app-content">
+
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page">
+      <div class="welcome-card">
+        <div class="welcome-greeting">Welcome back 👋</div>
+        <div class="welcome-name" id="home-name">Loading...</div>
+        <div class="welcome-stats">
+          <div>
+            <div class="wstat-val" id="home-tasks">0</div>
+            <div class="wstat-label">Tasks</div>
+          </div>
+          <div>
+            <div class="wstat-val" id="home-rating">—</div>
+            <div class="wstat-label">Rating</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="qa-btn" onclick="goToPage('post')">
+          <span class="qa-icon">📋</span>
+          <span class="qa-label">Post a Task</span>
+          <span class="qa-sub">Name your price</span>
+        </button>
+        <button class="qa-btn" onclick="goToPage('feed')">
+          <span class="qa-icon">⚡</span>
+          <span class="qa-label">Find Tasks</span>
+          <span class="qa-sub">Earn money</span>
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div id="home-activity">
+          <div class="loading"><div class="spinner"></div>Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST TASK PAGE -->
+    <div id="page-post" class="page" style="display:none">
+      <div class="page-title">Post a Task</div>
+      <div class="page-sub">Describe what you need. Someone nearby will handle it.</div>
+
+      <div class="card">
+        <div class="card-title">Category</div>
+        <div class="cat-grid">
+          <div class="cat-btn selected" onclick="selectCat(this,'🪳','Pest Control')"><span class="cat-emoji">🪳</span><span class="cat-label">Pest</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🧹','Cleaning')"><span class="cat-emoji">🧹</span><span class="cat-label">Clean</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🛒','Shopping')"><span class="cat-emoji">🛒</span><span class="cat-label">Shop</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🔧','Repairs')"><span class="cat-emoji">🔧</span><span class="cat-label">Fix</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'📦','Moving')"><span class="cat-emoji">📦</span><span class="cat-label">Move</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🐕','Pets')"><span class="cat-emoji">🐕</span><span class="cat-label">Pets</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🕐','Wait in Line')"><span class="cat-emoji">🕐</span><span class="cat-label">Wait</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🪑','Furniture')"><span class="cat-emoji">🪑</span><span class="cat-label">Furniture</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'✨','Other')"><span class="cat-emoji">✨</span><span class="cat-label">Other</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Details</div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="task-title" placeholder="e.g. Catch a cockroach in my bathroom" maxlength="80">
+        </div>
+        <div class="form-group">
+          <label>Description <span style="font-weight:400; color:var(--mid)">(optional)</span></label>
+          <textarea id="task-desc" placeholder="Any extra details..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="task-location" placeholder="Neighborhood or address">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Price & Timing</div>
+        <div class="form-group">
+          <label>Your offer</label>
+          <div class="price-wrap">
+            <span class="price-sym">₪</span>
+            <input type="number" id="task-price" placeholder="0" min="10">
+          </div>
+          <div class="price-chips">
+            <div class="pchip" onclick="setPrice(50)">₪50</div>
+            <div class="pchip" onclick="setPrice(100)">₪100</div>
+            <div class="pchip" onclick="setPrice(150)">₪150</div>
+            <div class="pchip" onclick="setPrice(200)">₪200</div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:20px">
+          <label>When?</label>
+          <div class="urgency-row">
+            <div class="urg-btn selected" onclick="selectUrgency(this,'ASAP')"><div class="urg-icon">🔥</div><span class="urg-label">Right now</span></div>
+            <div class="urg-btn" onclick="selectUrgency(this,'Today')"><div class="urg-icon">📅</div><span class="urg-label">Today</span></div>
+            <div class="urg-btn" onclick="selectUrgency(this,'This week')"><div class="urg-icon">🗓️</div><span class="urg-label">This week</span></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="submitTask()">Post Task 🚀</button>
+    </div>
+
+    <!-- FEED PAGE -->
+    <div id="page-feed" class="page" style="display:none">
+      <div class="page-title">Tasks Near You</div>
+      <div class="page-sub" id="feed-count">Loading available tasks...</div>
+      <div id="feed-list">
+        <div class="loading"><div class="spinner"></div>Finding tasks...</div>
+      </div>
+    </div>
+
+    <!-- MY TASKS PAGE -->
+    <div id="page-mytasks" class="page" style="display:none">
+      <div class="page-title">My Tasks</div>
+      <div class="page-sub">Everything you've posted</div>
+      <div id="mytasks-list">
+        <div class="loading"><div class="spinner"></div>Loading your tasks...</div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="page-profile" class="page" style="display:none">
+      <div class="profile-hero">
+        <div class="profile-avatar-big" id="profile-avatar">J</div>
+        <div class="profile-name-big" id="profile-name">Loading...</div>
+        <div class="profile-role" id="profile-role">—</div>
+        <div class="profile-stats">
+          <div>
+            <div class="pstat-val" id="profile-tasks">0</div>
+            <div class="pstat-label">Tasks</div>
+          </div>
+          <div>
+            <div class="pstat-val" id="profile-rating">—</div>
+            <div class="pstat-label">Rating</div>
+          </div>
+          <div>
+            <div class="pstat-val" id="profile-city">—</div>
+            <div class="pstat-label">City</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Account</div>
+        <div style="font-size:14px; color:var(--mid); line-height:1.8;">
+          <div>📧 <span id="profile-email">—</span></div>
+          <div>📍 <span id="profile-city2">—</span></div>
+          <div>🎭 Role: <span id="profile-role2">—</span></div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="background:var(--black);" onclick="handleSignout()">Sign Out</button>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="bnav-item active" onclick="goToPage('home')" id="bnav-home">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">Home</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('feed')" id="bnav-feed">
+      <span class="bnav-icon">⚡</span>
+      <span class="bnav-label">Find Tasks</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('post')" id="bnav-post">
+      <span class="bnav-icon">➕</span>
+      <span class="bnav-label">Post</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('mytasks')" id="bnav-mytasks">
+      <span class="bnav-icon">📋</span>
+      <span class="bnav-label">My Tasks</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('profile')" id="bnav-profile">
+      <span class="bnav-icon">👤</span>
+      <span class="bnav-label">Profile</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // ─── SUPABASE INIT ───
+  const SUPA_URL = 'https://dinmlrogalwcxdznmruc.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpbm1scm9nYWx3Y3hkem5tcnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NjI4NDAsImV4cCI6MjA5NzAzODg0MH0.uk4rdmlX843nYSKXyS-myRWXJoyHEdy6XpgukjpaTpo';
+  const { createClient } = supabase;
+  const sb = createClient(SUPA_URL, SUPA_KEY);
+
+  // ─── STATE ───
+  let currentUser = null;
+  let currentProfile = null;
+  let selectedRole = 'poster';
+  let selectedCat = { emoji: '🪳', label: 'Pest Control' };
+  let selectedUrgency = 'ASAP';
+
+  // ─── INIT ───
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      await loadProfile();
+      showApp();
+    }
+
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        currentUser = session.user;
+        await loadProfile();
+        showApp();
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        currentProfile = null;
+        showAuth();
+      }
+    });
+  }
+
+  // ─── AUTH ───
+  function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+    clearAuthMessages();
+  }
+
+  function selectRole(role, el) {
+    selectedRole = role;
+    document.querySelectorAll('.role-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return showError('Please fill in all fields.');
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) return showError(error.message);
+  }
+
+  async function handleSignup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const city = document.getElementById('signup-city').value;
+
+    if (!name || !email || !password) return showError('Please fill in all fields.');
+    if (password.length < 6) return showError('Password must be at least 6 characters.');
+
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if (error) return showError(error.message);
+
+    if (data.user) {
+      // Store signup data in localStorage to create profile after email confirmation
+      localStorage.setItem('kama_pending_profile', JSON.stringify({
+        name, email, city,
+        role: selectedRole
+      }));
+      showSuccess('Account created! Check your email to confirm, then log in.');
+    }
+  }
+
+  async function handleSignout() {
+    await sb.auth.signOut();
+  }
+
+  // ─── PROFILE ───
+  async function loadProfile() {
+    let { data } = await sb.from('users').select('*').eq('id', currentUser.id).single();
+    if (!data) {
+      // Check if we have pending profile data from signup
+      const pending = localStorage.getItem('kama_pending_profile');
+      let profileData = { name: currentUser.email.split('@')[0], role: 'poster', city: 'Tel Aviv' };
+      if (pending) {
+        try { profileData = { ...profileData, ...JSON.parse(pending) }; } catch(e) {}
+        localStorage.removeItem('kama_pending_profile');
+      }
+      const res = await sb.from('users').insert({
+        id: currentUser.id,
+        name: profileData.name,
+        email: currentUser.email,
+        city: profileData.city || 'Tel Aviv',
+        role: profileData.role,
+        rating: 0,
+        total_reviews: 0,
+        tasks_completed: 0,
+        rank: 'bronze'
+      }).select().single();
+      data = res.data;
+    }
+    currentProfile = data;
+    updateUI();
+  }
+
+  function updateUI() {
+    if (!currentProfile) return;
+    const name = currentProfile.name || currentUser.email;
+    const initial = name[0].toUpperCase();
+
+    document.getElementById('nav-avatar').textContent = initial;
+    document.getElementById('home-name').textContent = name.split(' ')[0] + ' 👋';
+    document.getElementById('home-tasks').textContent = currentProfile.tasks_completed || 0;
+    document.getElementById('home-rating').textContent = currentProfile.rating > 0 ? currentProfile.rating.toFixed(1) + '★' : '—';
+
+    document.getElementById('profile-avatar').textContent = initial;
+    document.getElementById('profile-name').textContent = name;
+    document.getElementById('profile-role').textContent = currentProfile.role === 'helper' ? '⚡ Kama Helper' : '📋 Task Poster';
+    document.getElementById('profile-email').textContent = currentUser.email;
+    document.getElementById('profile-city').textContent = currentProfile.city || '—';
+    document.getElementById('profile-city2').textContent = currentProfile.city || '—';
+    document.getElementById('profile-role2').textContent = currentProfile.role || '—';
+    document.getElementById('profile-tasks').textContent = currentProfile.tasks_completed || 0;
+    document.getElementById('profile-rating').textContent = currentProfile.rating > 0 ? currentProfile.rating.toFixed(1) + '★' : '—';
+  }
+
+  // ─── SCREENS ───
+  function showApp() {
+    document.getElementById('screen-auth').classList.remove('active');
+    document.getElementById('screen-app').classList.add('active');
+    goToPage('home');
+    loadHomeActivity();
+  }
+
+  function showAuth() {
+    document.getElementById('screen-app').classList.remove('active');
+    document.getElementById('screen-auth').classList.add('active');
+  }
+
+  // ─── NAVIGATION ───
+  function goToPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).style.display = 'block';
+    const bnav = document.getElementById('bnav-' + page);
+    if (bnav) bnav.classList.add('active');
+
+    if (page === 'feed') loadFeed();
+    if (page === 'mytasks') loadMyTasks();
+  }
+
+  // ─── HOME ───
+  async function loadHomeActivity() {
+    const el = document.getElementById('home-activity');
+    const { data: tasks } = await sb.from('tasks')
+      .select('*')
+      .eq('poster_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (!tasks || tasks.length === 0) {
+      el.innerHTML = '<div style="font-size:14px; color:var(--mid); text-align:center; padding:16px;">No activity yet. Post your first task! 🚀</div>';
+      return;
+    }
+
+    el.innerHTML = tasks.map(t => `
+      <div style="padding:12px 0; border-bottom:1px solid var(--border); font-size:14px;">
+        <div style="font-weight:700; margin-bottom:3px;">${t.title}</div>
+        <div style="color:var(--mid); font-size:12px;">₪${t.price} · ${t.status} · ${t.category}</div>
+      </div>
+    `).join('');
+  }
+
+  // ─── POST TASK ───
+  function selectCat(el, emoji, label) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedCat = { emoji, label };
+  }
+
+  function selectUrgency(el, val) {
+    document.querySelectorAll('.urg-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedUrgency = val;
+  }
+
+  function setPrice(val) {
+    document.getElementById('task-price').value = val;
+    document.querySelectorAll('.pchip').forEach(c => c.classList.remove('selected'));
+    event.target.classList.add('selected');
+  }
+
+  async function submitTask() {
+    const title = document.getElementById('task-title').value.trim();
+    const desc = document.getElementById('task-desc').value.trim();
+    const location = document.getElementById('task-location').value.trim();
+    const price = parseFloat(document.getElementById('task-price').value);
+
+    if (!title) return showToast('Please add a title', 'error');
+    if (!price || price < 10) return showToast('Minimum price is ₪10', 'error');
+    if (!location) return showToast('Please add a location', 'error');
+
+    const { error } = await sb.from('tasks').insert({
+      poster_id: currentUser.id,
+      title,
+      description: desc,
+      category: selectedCat.label,
+      price,
+      urgency: selectedUrgency,
+      location,
+      status: 'live'
+    });
+
+    if (error) return showToast('Error posting task', 'error');
+
+    showToast('Task posted! 🚀', 'success');
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-desc').value = '';
+    document.getElementById('task-location').value = '';
+    document.getElementById('task-price').value = '';
+    goToPage('mytasks');
+  }
+
+  // ─── FEED ───
+  async function loadFeed() {
+    const el = document.getElementById('feed-list');
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Finding tasks...</div>';
+
+    const { data: tasks } = await sb.from('tasks')
+      .select('*, users!poster_id(name, rating)')
+      .eq('status', 'live')
+      .neq('poster_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (!tasks || tasks.length === 0) {
+      document.getElementById('feed-count').textContent = 'No tasks available right now';
+      el.innerHTML = `<div class="empty"><div class="empty-icon">😴</div><div class="empty-title">No tasks nearby</div><div class="empty-sub">Check back soon or expand your area</div></div>`;
+      return;
+    }
+
+    document.getElementById('feed-count').textContent = `${tasks.length} task${tasks.length !== 1 ? 's' : ''} available`;
+
+    el.innerHTML = tasks.map(t => `
+      <div class="task-card ${t.urgency === 'ASAP' ? 'urgent' : ''}">
+        <div class="task-card-top">
+          <div style="flex:1">
+            <div class="task-badges">
+              <span class="badge badge-cat">${t.category}</span>
+              ${t.urgency === 'ASAP' ? '<span class="badge badge-urgent">🔥 ASAP</span>' : ''}
+              <span class="badge badge-new">New</span>
+            </div>
+            <div class="task-title">${t.title}</div>
+            <div class="task-meta">
+              <span>📍 ${t.location}</span>
+              <span>⏰ ${t.urgency}</span>
+            </div>
+          </div>
+          <div class="task-price">₪${t.price}</div>
+        </div>
+        ${t.description ? `<div style="font-size:13px; color:var(--mid); margin-bottom:8px; line-height:1.5;">${t.description.substring(0, 100)}${t.description.length > 100 ? '...' : ''}</div>` : ''}
+        <div class="task-actions">
+          <button class="btn-skip" onclick="this.closest('.task-card').remove(); updateFeedCount()">Skip</button>
+          <button class="btn-accept" onclick="acceptTask('${t.id}', this)">Accept ₪${t.price} →</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateFeedCount() {
+    const remaining = document.querySelectorAll('#feed-list .task-card').length;
+    document.getElementById('feed-count').textContent = `${remaining} task${remaining !== 1 ? 's' : ''} available`;
+  }
+
+  async function acceptTask(taskId, btn) {
+    const { error } = await sb.from('tasks').update({
+      helper_id: currentUser.id,
+      status: 'matched'
+    }).eq('id', taskId);
+
+    if (error) return showToast('Error accepting task', 'error');
+
+    btn.closest('.task-card').style.opacity = '0.5';
+    btn.textContent = '✅ Accepted!';
+    btn.disabled = true;
+    showToast('Task accepted! 💪', 'success');
+
+    if (currentProfile) {
+      await sb.from('users').update({
+        tasks_completed: (currentProfile.tasks_completed || 0) + 1
+      }).eq('id', currentUser.id);
+      await loadProfile();
+    }
+  }
+
+  // ─── MY TASKS ───
+  async function loadMyTasks() {
+    const el = document.getElementById('mytasks-list');
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+    const { data: tasks } = await sb.from('tasks')
+      .select('*')
+      .eq('poster_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (!tasks || tasks.length === 0) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No tasks yet</div><div class="empty-sub">Post your first task to get started</div></div>`;
+      return;
+    }
+
+    el.innerHTML = tasks.map(t => `
+      <div class="mytask-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:8px;">
+          <div style="flex:1">
+            <div style="font-size:12px; color:var(--mid); margin-bottom:4px;">
+              <span class="status-dot status-${t.status}"></span>
+              ${t.status.toUpperCase()} · ${t.category}
+            </div>
+            <div style="font-weight:700; font-size:15px; margin-bottom:4px;">${t.title}</div>
+            <div style="font-size:13px; color:var(--mid);">📍 ${t.location} · ⏰ ${t.urgency}</div>
+          </div>
+          <div style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:800; flex-shrink:0;">₪${t.price}</div>
+        </div>
+        ${t.status === 'live' ? `<div style="font-size:12px; color:var(--orange); font-weight:600; margin-top:8px;">🟠 Waiting for a helper...</div>` : ''}
+        ${t.status === 'matched' ? `<div style="font-size:12px; color:var(--success); font-weight:600; margin-top:8px;">✅ Helper is on the way!</div>` : ''}
+        ${t.status === 'completed' ? `<div style="font-size:12px; color:var(--mid); font-weight:600; margin-top:8px;">✓ Completed</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ─── HELPERS ───
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('auth-success');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  function clearAuthMessages() {
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  function showToast(msg, type = '') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ─── CITY DATA ───
+  const cityData = {
+    'Tel Aviv District': [
+      'Tel Aviv-Yafo', 'Bat Yam', 'Holon', 'Bnei Brak', 'Givatayim',
+      'Herzliya', 'Kiryat Ono', 'Or Yehuda', 'Ramat Gan', 'Ramat HaSharon'
+    ],
+    'Central District': [
+      'Rishon LeZion', 'Petah Tikva', 'Rehovot', 'Netanya', "Ra'anana",
+      'Kfar Saba', 'Hod HaSharon', 'Rosh HaAyin', 'Lod', 'Ramla',
+      'Nes Ziona', 'Yehud', 'Shoham', "Modi'in", 'Kiryat Gat',
+      'Givat Shmuel', 'Bnei Dror', 'Kfar Yona'
+    ],
+    'Jerusalem District': [
+      'Jerusalem', 'Beit Shemesh', "Ma'ale Adumim", "Givat Ze'ev",
+      'Beitar Illit', 'Mevaseret Zion'
+    ],
+    'Haifa District': [
+      'Haifa', 'Kiryat Ata', 'Kiryat Bialik', 'Kiryat Motzkin',
+      'Kiryat Yam', 'Acre', 'Hadera', 'Tirat Carmel', 'Nesher',
+      'Yokneam', 'Zichron Yaakov'
+    ],
+    'Northern District': [
+      'Nazareth', 'Afula', 'Tiberias', 'Nahariya', 'Karmiel',
+      'Safed', 'Migdal HaEmek', 'Kiryat Shmona', 'Shlomi',
+      'Nof HaGalil', 'Eilabun'
+    ],
+    'Southern District': [
+      'Beer Sheva', 'Ashdod', 'Ashkelon', 'Eilat', 'Netivot',
+      'Ofakim', 'Dimona', 'Arad', 'Sderot', 'Kiryat Gat',
+      'Kiryat Malachi', 'Gedera'
+    ]
+  };
+
+  function updateCities() {
+    const region = document.getElementById('signup-region').value;
+    const citySelect = document.getElementById('signup-city');
+    citySelect.disabled = false;
+    citySelect.innerHTML = '<option value="" disabled selected>Select city...</option>';
+    if (cityData[region]) {
+      cityData[region].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+    }
+  }
+
+  // Also add region/city to post task location
+  // ─── START ───
+  init();
+</script>
+
+</body>
+</html>
