@@ -211,10 +211,10 @@
       <div class="page active" id="page-dashboard">
         <h1 style="font-family:Space Grotesk,sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px; margin-bottom:24px;">Dashboard</h1>
         <div class="stats-row">
-          <div class="stat-card" onclick="switchPage('users', document.querySelector('.sidebar-item')" style="cursor:pointer;"><div class="stat-icon">👥</div><div class="stat-val" id="stat-users">—</div><div class="stat-label">Total users</div></div>
-          <div class="stat-card" onclick="switchPage('tasks', document.querySelector('.sidebar-item'))" style="cursor:pointer;"><div class="stat-icon">📋</div><div class="stat-val" id="stat-tasks">—</div><div class="stat-label">Total tasks</div></div>
-          <div class="stat-card" style="cursor:pointer;"><div class="stat-icon">⚡</div><div class="stat-val" id="stat-helpers">—</div><div class="stat-label">Helpers</div></div>
-          <div class="stat-card" style="cursor:pointer;"><div class="stat-icon">✅</div><div class="stat-val" id="stat-completed">—</div><div class="stat-label">Completed</div></div>
+          <div class="stat-card" onclick="switchPage('users', this)" style="cursor:pointer;"><div class="stat-icon">👥</div><div class="stat-val" id="stat-users">—</div><div class="stat-label">Total users</div></div>
+          <div class="stat-card" onclick="switchPage('tasks', this)" style="cursor:pointer;"><div class="stat-icon">📋</div><div class="stat-val" id="stat-tasks">—</div><div class="stat-label">Total tasks</div></div>
+          <div class="stat-card" onclick="switchPage('disputes', this)" style="cursor:pointer;"><div class="stat-icon">⚡</div><div class="stat-val" id="stat-helpers">—</div><div class="stat-label">Helpers</div></div>
+          <div class="stat-card" onclick="switchPage('reviews', this)" style="cursor:pointer;"><div class="stat-icon">✅</div><div class="stat-val" id="stat-completed">—</div><div class="stat-label">Completed</div></div>
         </div>
 
         <div class="table-card">
@@ -484,12 +484,22 @@
   function switchPage(page, el) {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.querySelectorAll(".sidebar-item").forEach(s => s.classList.remove("active"));
-    document.getElementById("page-"+page).classList.add("active");
-    el.classList.add("active");
+    document.querySelectorAll(".mobile-nav-item").forEach(s => s.classList.remove("active"));
+    const pageEl = document.getElementById("page-"+page);
+    if (pageEl) pageEl.classList.add("active");
+    if (el && el.classList) el.classList.add("active");
+    const mobileBtn = document.getElementById("mnav-"+page);
+    if (mobileBtn) mobileBtn.classList.add("active");
     if (page === "users") document.getElementById("users-table").innerHTML = renderUsersTable(allUsers);
     if (page === "tasks") document.getElementById("tasks-table").innerHTML = renderTasksTable(allTasks);
     if (page === "disputes") loadDisputesPage();
     if (page === "reviews") loadReviewsPage();
+    if (page === "dashboard") loadDashboard();
+    window.scrollTo(0, 0);
+  }
+
+  function switchPageMobile(el, page) {
+    switchPage(page, el);
   }
 
   function subscribeToNewUsers() {
@@ -548,13 +558,6 @@
     </div>
   </div>
 
-  <script>
-  function switchPageMobile(el, page) {
-    document.querySelectorAll(".mobile-nav-item").forEach(b => b.classList.remove("active"));
-    el.classList.add("active");
-    const fakeEl = { classList: { add: () => {}, remove: () => {} } };
-    switchPage(page, fakeEl);
-  }
-  </script>
+
 </body>
 </html>
