@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kama Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --yellow: #FFD600; --orange: #FF5C00; --black: #0D0D0D;
+    --white: #FFFFFF; --gray: #F5F5F0; --mid: #6B6B6B;
+    --border: #E8E8E8; --success: #34C759; --error: #FF3B30; --blue: #007AFF;
+  }
+  body { font-family: "Inter", sans-serif; background: var(--gray); color: var(--black); min-height: 100vh; }
+
+  /* LOGIN */
+  .login-screen {
+    min-height: 100vh; display: flex; justify-content: center;
+    align-items: center; padding: 24px; background: var(--black);
+  }
+  .login-card {
+    background: var(--white); border-radius: 24px; padding: 40px;
+    max-width: 380px; width: 100%;
+  }
+  .login-logo { font-family: "Space Grotesk", sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+  .login-logo span { color: var(--orange); }
+  .login-sub { font-size: 13px; color: var(--mid); margin-bottom: 28px; }
+  .login-error { background: #FFE5E5; color: var(--error); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; margin-bottom: 16px; display: none; }
+
+  /* NAV */
+  nav { background: var(--black); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-family: "Space Grotesk", sans-serif; font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -0.5px; }
+  .nav-logo span { color: var(--orange); }
+  .nav-badge { background: var(--orange); color: var(--white); padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; }
+
+  /* LAYOUT */
+  .admin-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 56px); }
+
+  /* SIDEBAR */
+  .sidebar { background: var(--white); border-right: 1px solid var(--border); padding: 24px 16px; }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+    border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600;
+    color: var(--mid); transition: all 0.2s; margin-bottom: 4px; border: none;
+    background: none; width: 100%; text-align: left; font-family: "Inter", sans-serif;
+  }
+  .sidebar-item:hover { background: var(--gray); color: var(--black); }
+  .sidebar-item.active { background: var(--black); color: var(--white); }
+  .sidebar-icon { font-size: 18px; }
+  .sidebar-count { margin-left: auto; background: var(--orange); color: var(--white); padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 800; }
+
+  /* MAIN */
+  .main { padding: 32px; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--white); border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
+  .stat-icon { font-size: 28px; margin-bottom: 10px; }
+  .stat-val { font-family: "Space Grotesk", sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -2px; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--mid); font-weight: 500; }
+  .stat-change { font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .stat-change.up { color: var(--success); }
+  .stat-change.down { color: var(--error); }
+
+  /* TABLE */
+  .table-card { background: var(--white); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+  .table-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .table-title { font-family: "Space Grotesk", sans-serif; font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .search-input { padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: "Inter", sans-serif; outline: none; width: 220px; transition: border-color 0.2s; }
+  .search-input:focus { border-color: var(--black); }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--mid); border-bottom: 1px solid var(--border); background: var(--gray); }
+  td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #FAFAF8; }
+
+  .avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: var(--yellow); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; margin-right: 8px; vertical-align: middle; }
+  .role-badge { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+  .role-poster { background: #FFF0E8; color: var(--orange); }
+  .role-helper { background: #FFFBE0; color: #9A7000; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+  .status-active { background: var(--success); }
+  .status-new { background: var(--blue); }
+
+  .btn-sm { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; border: none; }
+  .btn-view { background: var(--black); color: var(--white); }
+  .btn-view:hover { background: var(--orange); }
+  .btn-ban { background: #FFE5E5; color: var(--error); }
+  .btn-ban:hover { background: var(--error); color: var(--white); }
+
+  /* DETAIL MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; padding: 24px; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--white); border-radius: 24px; padding: 36px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-family: "Space Grotesk", sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-close { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .detail-row { display: flex; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: var(--mid); font-weight: 500; width: 140px; flex-shrink: 0; }
+  .detail-val { font-weight: 600; flex: 1; }
+
+  /* TASKS TABLE */
+  .task-status { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+  .status-live { background: #FFF0E8; color: var(--orange); }
+  .status-matched { background: #E8F0FF; color: var(--blue); }
+  .status-completed { background: #E5FFE5; color: #1A7A1A; }
+  .status-cancelled { background: var(--gray); color: var(--mid); }
+
+  /* DISPUTES */
+  .dispute-card { background: var(--white); border-radius: 14px; border: 1.5px solid var(--border); padding: 18px; margin-bottom: 12px; }
+  .dispute-card.urgent { border-color: var(--error); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 48px; color: var(--mid); }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 48px; color: var(--mid); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  input, select, textarea { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; background: var(--white); }
+  input:focus, select:focus { border-color: var(--black); }
+  .btn-primary { padding: 13px 28px; background: var(--black); color: var(--white); border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: "Space Grotesk", sans-serif; transition: all 0.2s; width: 100%; }
+  .btn-primary:hover { background: var(--orange); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--black); color: var(--white); padding: 12px 24px; border-radius: 100px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 9999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+
+  @media (max-width: 768px) {
+    .admin-layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .main { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Kama<span>.</span> Admin</div>
+    <div class="login-sub">Restricted access. Authorized personnel only.</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="admin-email" placeholder="admin@kama.app"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="admin-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') adminLogin()"></div>
+    <button class="btn-primary" onclick="adminLogin()">Login to Admin →</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel" style="display:none;">
+  <nav>
+    <div class="nav-logo">Kama<span>.</span> <span style="font-size:14px; opacity:0.5;">Admin</span></div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="nav-badge" id="nav-online">● Live</div>
+      <div style="color:var(--mid); font-size:13px;" id="nav-admin-name">—</div>
+      <button onclick="adminLogout()" style="padding:7px 16px; border:1px solid rgba(255,255,255,0.2); border-radius:100px; background:none; color:var(--white); font-size:12px; font-weight:600; cursor:pointer;">Sign out</button>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <button class="sidebar-item active" onclick="switchPage('dashboard', this)"><span class="sidebar-icon">📊</span> Dashboard</button>
+      <button class="sidebar-item" onclick="switchPage('users', this)"><span class="sidebar-icon">👥</span> Users <span class="sidebar-count" id="users-count">0</span></button>
+      <button class="sidebar-item" onclick="switchPage('tasks', this)"><span class="sidebar-icon">📋</span> Tasks <span class="sidebar-count" id="tasks-count">0</span></button>
+      <button class="sidebar-item" onclick="switchPage('disputes', this)"><span class="sidebar-icon">⚠️</span> Disputes</button>
+      <button class="sidebar-item" onclick="switchPage('reviews', this)"><span class="sidebar-icon">⭐</span> Reviews</button>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <h1 style="font-family:Space Grotesk,sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px; margin-bottom:24px;">Dashboard</h1>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="stat-users">—</div><div class="stat-label">Total users</div></div>
+          <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val" id="stat-tasks">—</div><div class="stat-label">Total tasks</div></div>
+          <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-val" id="stat-helpers">—</div><div class="stat-label">Helpers</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" id="stat-completed">—</div><div class="stat-label">Completed</div></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">Recent Signups</div></div>
+          <div id="recent-signups"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">Recent Tasks</div></div>
+          <div id="recent-tasks-dash"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <h1 style="font-family:Space Grotesk,sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px;">Users</h1>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <input class="search-input" type="text" placeholder="Search by name or email..." oninput="searchUsers(this.value)" id="user-search">
+            <select onchange="filterByRole(this.value)" style="width:auto; padding:9px 14px;">
+              <option value="">All roles</option>
+              <option value="poster">Posters</option>
+              <option value="helper">Helpers</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-card">
+          <div id="users-table"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- TASKS -->
+      <div class="page" id="page-tasks">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <h1 style="font-family:Space Grotesk,sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px;">Tasks</h1>
+          <select onchange="filterByStatus(this.value)" style="width:auto; padding:9px 14px;">
+            <option value="">All status</option>
+            <option value="live">Live</option>
+            <option value="matched">Matched</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="tasks-table"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- DISPUTES -->
+      <div class="page" id="page-disputes">
+        <h1 style="font-family:Space Grotesk,sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px; margin-bottom:24px;">Disputes</h1>
+        <div id="disputes-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+      </div>
+
+      <!-- REVIEWS -->
+      <div class="page" id="page-reviews">
+        <h1 style="font-family:Space Grotesk,sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px; margin-bottom:24px;">Reviews</h1>
+        <div class="table-card">
+          <div id="reviews-table"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- USER DETAIL MODAL -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="modal-user-name">User Details</span>
+      <button class="modal-close" onclick="closeUserModal()">✕</button>
+    </div>
+    <div id="modal-user-content"></div>
+  </div>
+</div>
+
+<script>
+  const SUPA_URL = "https://dinmlrogalwcxdznmruc.supabase.co";
+  const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpbm1scm9nYWx3Y3hkem5tcnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NjI4NDAsImV4cCI6MjA5NzAzODg0MH0.uk4rdmlX843nYSKXyS-myRWXJoyHEdy6XpgukjpaTpo";
+  const ADMIN_EMAIL = "kmxjin001@gmail.com";
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPA_URL, SUPA_KEY);
+
+  let allUsers = [];
+  let allTasks = [];
+  let currentAdminUser = null;
+
+  async function adminLogin() {
+    const email = document.getElementById("admin-email").value.trim();
+    const password = document.getElementById("admin-password").value;
+    const errEl = document.getElementById("login-error");
+
+    if (email !== ADMIN_EMAIL) {
+      errEl.textContent = "Access denied. Not an admin account.";
+      errEl.style.display = "block"; return;
+    }
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { errEl.textContent = error.message; errEl.style.display = "block"; return; }
+
+    currentAdminUser = data.user;
+    document.getElementById("nav-admin-name").textContent = email.split("@")[0];
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("admin-panel").style.display = "block";
+    loadDashboard();
+    subscribeToNewUsers();
+  }
+
+  function adminLogout() {
+    sb.auth.signOut();
+    location.reload();
+  }
+
+  async function loadDashboard() {
+    const [{ data: users }, { data: tasks }, { data: reviews }] = await Promise.all([
+      sb.from("users").select("*").order("created_at", { ascending: false }),
+      sb.from("tasks").select("*").order("created_at", { ascending: false }),
+      sb.from("reviews").select("*")
+    ]);
+
+    allUsers = users || [];
+    allTasks = tasks || [];
+
+    const helpers = allUsers.filter(u => u.role === "helper");
+    const completed = allTasks.filter(t => t.status === "completed");
+
+    document.getElementById("stat-users").textContent = allUsers.length;
+    document.getElementById("stat-tasks").textContent = allTasks.length;
+    document.getElementById("stat-helpers").textContent = helpers.length;
+    document.getElementById("stat-completed").textContent = completed.length;
+    document.getElementById("users-count").textContent = allUsers.length;
+    document.getElementById("tasks-count").textContent = allTasks.length;
+
+    // Recent signups
+    const recentUsers = allUsers.slice(0, 8);
+    document.getElementById("recent-signups").innerHTML = renderUsersTable(recentUsers);
+
+    // Recent tasks
+    const recentTasks = allTasks.slice(0, 8);
+    document.getElementById("recent-tasks-dash").innerHTML = renderTasksTable(recentTasks);
+  }
+
+  function renderUsersTable(users) {
+    if (!users.length) return "<div class='empty'><div class='empty-icon'>👥</div>No users yet</div>";
+    return `<table><thead><tr><th>User</th><th>Role</th><th>City</th><th>Tasks</th><th>Rating</th><th>Joined</th><th></th></tr></thead><tbody>
+      ${users.map(u => `<tr>
+        <td><span class="avatar-sm">${(u.name||"?")[0].toUpperCase()}</span>${u.name || "—"}<div style="font-size:11px;color:var(--mid);">${u.email||""}</div></td>
+        <td><span class="role-badge ${u.role === "helper" ? "role-helper" : "role-poster"}">${u.role || "poster"}</span></td>
+        <td>${u.city || "—"}</td>
+        <td>${u.tasks_completed || 0}</td>
+        <td>${u.rating > 0 ? u.rating.toFixed(1) + "★" : "—"}</td>
+        <td style="font-size:12px;color:var(--mid);">${new Date(u.created_at).toLocaleDateString()}</td>
+        <td><button class="btn-sm btn-view" onclick="viewUser('${u.id}')">View</button></td>
+      </tr>`).join("")}
+    </tbody></table>`;
+  }
+
+  function renderTasksTable(tasks) {
+    if (!tasks.length) return "<div class='empty'><div class='empty-icon'>📋</div>No tasks yet</div>";
+    return `<table><thead><tr><th>Title</th><th>Category</th><th>Price</th><th>Status</th><th>Location</th><th>Posted</th></tr></thead><tbody>
+      ${tasks.map(t => `<tr>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.title||"—"}</td>
+        <td>${t.category||"—"}</td>
+        <td style="font-family:Space Grotesk,sans-serif;font-weight:700;">₪${t.price||0}</td>
+        <td><span class="task-status status-${t.status}">${t.status}</span></td>
+        <td style="font-size:12px;color:var(--mid);">${t.location||"—"}</td>
+        <td style="font-size:12px;color:var(--mid);">${new Date(t.created_at).toLocaleDateString()}</td>
+      </tr>`).join("")}
+    </tbody></table>`;
+  }
+
+  async function viewUser(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    const { data: userTasks } = await sb.from("tasks").select("*").eq("poster_id", userId).limit(5);
+    const { data: userReviews } = await sb.from("reviews").select("*").eq("reviewee_id", userId).limit(5);
+
+    document.getElementById("modal-user-name").textContent = user.name || "User";
+    document.getElementById("modal-user-content").innerHTML = `
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;">${(user.name||"?")[0].toUpperCase()}</div>
+        <div style="font-family:Space Grotesk,sans-serif;font-size:20px;font-weight:800;">${user.name||"—"}</div>
+        <span class="role-badge ${user.role==="helper"?"role-helper":"role-poster"}" style="margin-top:6px;display:inline-block;">${user.role||"poster"}</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Email</span><span class="detail-val">${user.email||"—"}</span></div>
+      <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-val">${user.phone ? "+972 "+user.phone : "—"}</span></div>
+      <div class="detail-row"><span class="detail-label">City</span><span class="detail-val">${user.city||"—"}</span></div>
+      <div class="detail-row"><span class="detail-label">Rating</span><span class="detail-val">${user.rating>0?user.rating.toFixed(1)+"★":"No reviews yet"}</span></div>
+      <div class="detail-row"><span class="detail-label">Tasks done</span><span class="detail-val">${user.tasks_completed||0}</span></div>
+      <div class="detail-row"><span class="detail-label">Rank</span><span class="detail-val">${user.rank||"bronze"}</span></div>
+      <div class="detail-row"><span class="detail-label">Joined</span><span class="detail-val">${new Date(user.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</span></div>
+      ${userTasks&&userTasks.length ? `
+        <div style="margin-top:20px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px;">Recent Tasks</div>
+        ${userTasks.map(t=>`<div style="padding:10px;background:var(--gray);border-radius:10px;margin-bottom:8px;font-size:13px;"><div style="font-weight:700;">${t.title}</div><div style="color:var(--mid);margin-top:2px;">₪${t.price} · <span class="task-status status-${t.status}">${t.status}</span></div></div>`).join("")}
+      ` : ""}
+      <div style="display:flex;gap:10px;margin-top:24px;">
+        <button onclick="banUser('${user.id}')" class="btn-sm btn-ban" style="flex:1;padding:12px;">🚫 Suspend User</button>
+        <button onclick="closeUserModal()" class="btn-sm btn-view" style="flex:1;padding:12px;">Close</button>
+      </div>`;
+    document.getElementById("user-modal").classList.add("show");
+  }
+
+  function closeUserModal() { document.getElementById("user-modal").classList.remove("show"); }
+
+  async function banUser(userId) {
+    if (!confirm("Are you sure you want to suspend this user?")) return;
+    await sb.from("users").update({ rank: "suspended" }).eq("id", userId);
+    showToast("User suspended ✓", "success");
+    closeUserModal();
+    loadDashboard();
+  }
+
+  function searchUsers(query) {
+    const filtered = allUsers.filter(u =>
+      (u.name||"").toLowerCase().includes(query.toLowerCase()) ||
+      (u.email||"").toLowerCase().includes(query.toLowerCase())
+    );
+    document.getElementById("users-table").innerHTML = renderUsersTable(filtered);
+  }
+
+  function filterByRole(role) {
+    const filtered = role ? allUsers.filter(u => u.role === role) : allUsers;
+    document.getElementById("users-table").innerHTML = renderUsersTable(filtered);
+  }
+
+  function filterByStatus(status) {
+    const filtered = status ? allTasks.filter(t => t.status === status) : allTasks;
+    document.getElementById("tasks-table").innerHTML = renderTasksTable(filtered);
+  }
+
+  async function loadDisputesPage() {
+    const { data: msgs } = await sb.from("messages").select("*, users!sender_id(name,email), tasks(title)").like("content", "[DISPUTE]%").order("created_at", { ascending: false });
+    const el = document.getElementById("disputes-list");
+    if (!msgs || !msgs.length) { el.innerHTML = "<div class='empty'><div class='empty-icon'>✅</div><div>No disputes! All good.</div></div>"; return; }
+    el.innerHTML = msgs.map(m => `
+      <div class="dispute-card urgent">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;">${m.users?.name||"Unknown"} <span style="color:var(--mid);font-weight:400;">· ${m.users?.email||""}</span></div>
+          <div style="font-size:11px;color:var(--mid);">${new Date(m.created_at).toLocaleDateString()}</div>
+        </div>
+        <div style="font-size:13px;color:var(--mid);margin-bottom:8px;">Task: ${m.tasks?.title||"Unknown"}</div>
+        <div style="font-size:14px;line-height:1.6;background:var(--gray);padding:12px;border-radius:10px;">${m.content.replace("[DISPUTE] ","")}</div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn-sm btn-view" onclick="showToast('Marked as resolved ✓','success')">✓ Resolve</button>
+          <button class="btn-sm btn-ban" onclick="showToast('User contacted ✓','success')">📧 Contact user</button>
+        </div>
+      </div>`).join("");
+  }
+
+  async function loadReviewsPage() {
+    const { data: reviews } = await sb.from("reviews").select("*, reviewer:users!reviewer_id(name), reviewee:users!reviewee_id(name), task:tasks(title,category)").order("created_at", { ascending: false });
+    const el = document.getElementById("reviews-table");
+    if (!reviews||!reviews.length) { el.innerHTML = "<div class='empty'><div class='empty-icon'>⭐</div>No reviews yet</div>"; return; }
+    el.innerHTML = `<table><thead><tr><th>From</th><th>To</th><th>Rating</th><th>Comment</th><th>Task</th><th>Date</th></tr></thead><tbody>
+      ${reviews.map(r=>`<tr>
+        <td>${r.reviewer?.name||"—"}</td>
+        <td>${r.reviewee?.name||"—"}</td>
+        <td>${"⭐".repeat(r.rating)}</td>
+        <td style="max-width:200px;font-size:13px;color:var(--mid);">${r.comment||"—"}</td>
+        <td style="font-size:12px;color:var(--mid);">${r.task?.category||""}</td>
+        <td style="font-size:12px;color:var(--mid);">${new Date(r.created_at).toLocaleDateString()}</td>
+      </tr>`).join("")}
+    </tbody></table>`;
+  }
+
+  function switchPage(page, el) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".sidebar-item").forEach(s => s.classList.remove("active"));
+    document.getElementById("page-"+page).classList.add("active");
+    el.classList.add("active");
+    if (page === "users") document.getElementById("users-table").innerHTML = renderUsersTable(allUsers);
+    if (page === "tasks") document.getElementById("tasks-table").innerHTML = renderTasksTable(allTasks);
+    if (page === "disputes") loadDisputesPage();
+    if (page === "reviews") loadReviewsPage();
+  }
+
+  function subscribeToNewUsers() {
+    sb.channel("new-users").on("postgres_changes", { event: "INSERT", schema: "public", table: "users" }, (payload) => {
+      const u = payload.new;
+      showToast("New signup: " + (u.name||u.email) + " (" + (u.role||"poster") + ")", "success");
+      allUsers.unshift(u);
+      document.getElementById("stat-users").textContent = allUsers.length;
+      document.getElementById("users-count").textContent = allUsers.length;
+      document.getElementById("recent-signups").innerHTML = renderUsersTable(allUsers.slice(0,8));
+    }).subscribe();
+
+    sb.channel("new-tasks").on("postgres_changes", { event: "INSERT", schema: "public", table: "tasks" }, (payload) => {
+      allTasks.unshift(payload.new);
+      document.getElementById("stat-tasks").textContent = allTasks.length;
+      document.getElementById("tasks-count").textContent = allTasks.length;
+    }).subscribe();
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.className = "toast " + (type||"") + " show";
+    setTimeout(() => t.classList.remove("show"), 3500);
+  }
+
+  // Check existing session
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session && session.user.email === ADMIN_EMAIL) {
+      currentAdminUser = session.user;
+      document.getElementById("nav-admin-name").textContent = session.user.email.split("@")[0];
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("admin-panel").style.display = "block";
+      loadDashboard();
+      subscribeToNewUsers();
+    }
+  });
+</script>
+</body>
+</html>
