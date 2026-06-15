@@ -1,0 +1,2737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kama — Get it done</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --yellow: #FFD600;
+    --orange: #FF5C00;
+    --black: #0D0D0D;
+    --white: #FFFFFF;
+    --gray: #F5F5F0;
+    --mid: #6B6B6B;
+    --border: #E8E8E8;
+    --success: #34C759;
+    --error: #FF3B30;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--gray);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* AUTH SCREEN */
+  #screen-auth {
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    background: var(--yellow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #screen-auth::before {
+    content: 'כמה?';
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 200px;
+    font-weight: 800;
+    color: rgba(0,0,0,0.05);
+    pointer-events: none;
+  }
+
+  .auth-card {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 40px 36px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.12);
+  }
+
+  .auth-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+  }
+
+  .auth-logo span { color: var(--orange); }
+
+  .auth-sub {
+    font-size: 15px;
+    color: var(--mid);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--gray);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    border-radius: 9px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    color: var(--mid);
+    transition: all 0.2s;
+  }
+
+  .auth-tab.active { background: var(--white); color: var(--black); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+  .form-group { margin-bottom: 16px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--black);
+  }
+
+  input, select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--black);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+
+  input:focus, select:focus { border-color: var(--black); }
+
+  .role-select-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .role-opt {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .role-opt:hover { border-color: var(--orange); }
+  .role-opt.selected { border-color: var(--orange); background: #FFF5F0; }
+  .role-opt-icon { font-size: 28px; margin-bottom: 6px; }
+  .role-opt-label { font-size: 13px; font-weight: 700; }
+  .role-opt-sub { font-size: 11px; color: var(--mid); margin-top: 2px; }
+
+  .btn-auth {
+    width: 100%;
+    padding: 15px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-auth:hover { background: var(--orange); }
+
+  .auth-error {
+    background: #FFE5E5;
+    color: var(--error);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .auth-success {
+    background: #E5FFE5;
+    color: var(--success);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* NAV */
+  .app-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--black);
+  }
+
+  .nav-logo span { color: var(--orange); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-avatar {
+    width: 36px;
+    height: 36px;
+    background: var(--yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .btn-signout {
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    color: var(--mid);
+  }
+
+  .btn-signout:hover { border-color: var(--error); color: var(--error); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    display: flex;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 8px 0 12px;
+  }
+
+  .bnav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .bnav-icon { font-size: 22px; }
+  .bnav-label { font-size: 10px; font-weight: 600; color: var(--mid); }
+  .bnav-item.active .bnav-label { color: var(--orange); }
+  .bnav-item.active .bnav-icon { filter: none; }
+
+  /* MAIN CONTENT */
+  .app-content {
+    flex: 1;
+    padding: 24px 20px 90px;
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* PAGE TITLE */
+  .page-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 6px;
+  }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--mid);
+    margin-bottom: 24px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 16px;
+  }
+
+  /* HOME SCREEN */
+  .welcome-card {
+    background: var(--black);
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 14px;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-card::after {
+    content: '⚡';
+    position: absolute;
+    right: 20px;
+    bottom: -10px;
+    font-size: 80px;
+    opacity: 0.1;
+  }
+
+  .welcome-greeting {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .welcome-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .welcome-stats {
+    display: flex;
+    gap: 24px;
+  }
+
+  .wstat-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--yellow);
+    letter-spacing: -1px;
+  }
+
+  .wstat-label { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  /* QUICK ACTIONS */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .qa-btn {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .qa-btn:hover { border-color: var(--orange); transform: translateY(-2px); }
+  .qa-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .qa-label { font-size: 14px; font-weight: 700; display: block; margin-bottom: 3px; }
+  .qa-sub { font-size: 12px; color: var(--mid); }
+
+  /* POST TASK FORM */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .cat-btn {
+    border: 2px solid var(--border);
+    background: var(--white);
+    border-radius: 12px;
+    padding: 12px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .cat-btn:hover { border-color: var(--orange); }
+  .cat-btn.selected { border-color: var(--orange); background: #FFF5F0; }
+  .cat-emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+  .cat-label { font-size: 10px; font-weight: 600; }
+
+  textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--black);
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+    min-height: 100px;
+    line-height: 1.6;
+  }
+
+  textarea:focus { border-color: var(--black); }
+
+  .price-wrap { position: relative; }
+  .price-sym { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; font-weight: 700; color: var(--mid); }
+  .price-wrap input { padding-left: 36px; font-size: 22px; font-weight: 800; font-family: 'Space Grotesk', sans-serif; }
+
+  .price-chips {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pchip {
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--white);
+    transition: all 0.2s;
+  }
+
+  .pchip:hover, .pchip.selected { background: var(--orange); color: var(--white); border-color: var(--orange); }
+
+  .urgency-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .urg-btn {
+    border: 2px solid var(--border);
+    background: var(--white);
+    border-radius: 12px;
+    padding: 14px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .urg-btn:hover { border-color: var(--black); }
+  .urg-btn.selected { border-color: var(--orange); background: #FFF5F0; }
+  .urg-icon { font-size: 20px; margin-bottom: 4px; }
+  .urg-label { font-size: 12px; font-weight: 700; display: block; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 15px;
+    background: var(--orange);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+    margin-top: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,92,0,0.3); }
+  .btn-primary:disabled { background: var(--border); color: var(--mid); transform: none; box-shadow: none; cursor: not-allowed; }
+
+  /* TASK CARDS IN FEED */
+  .task-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .task-card:hover { border-color: var(--black); transform: translateY(-1px); }
+  .task-card.urgent { border-left: 4px solid var(--error); }
+
+  .task-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .task-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge-cat { background: var(--gray); }
+  .badge-urgent { background: #FFE5E5; color: var(--error); }
+  .badge-new { background: #E5FFE5; color: #1A7A1A; }
+
+  .task-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .task-meta {
+    font-size: 13px;
+    color: var(--mid);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .task-price {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-accept {
+    flex: 1;
+    padding: 11px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-accept:hover { background: var(--orange); }
+
+  .btn-skip {
+    padding: 11px 18px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    color: var(--mid);
+    transition: all 0.2s;
+  }
+
+  .btn-skip:hover { border-color: var(--mid); }
+
+  /* MY TASKS */
+  .mytask-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    padding: 20px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .status-live { background: var(--orange); }
+  .status-matched { background: var(--success); }
+  .status-completed { background: var(--mid); }
+
+  /* PROFILE */
+  .profile-hero {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    text-align: center;
+    margin-bottom: 14px;
+  }
+
+  .profile-avatar-big {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 auto 16px;
+  }
+
+  .profile-name-big {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .profile-role {
+    font-size: 13px;
+    color: var(--mid);
+    margin-bottom: 16px;
+  }
+
+  .profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+  }
+
+  .pstat-val { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+  .pstat-label { font-size: 11px; color: var(--mid); margin-top: 2px; }
+
+  /* FILTER CHIPS */
+  .fchip {
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--white);
+    transition: all 0.2s;
+    white-space: nowrap;
+    color: var(--black);
+  }
+  .fchip:hover { border-color: var(--orange); color: var(--orange); }
+  .fchip.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--mid);
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--mid);
+  }
+
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--black); margin-bottom: 6px; }
+  .empty-sub { font-size: 14px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--black);
+    color: var(--white);
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--error); }
+
+  @media (min-width: 768px) {
+    .app-content { padding: 32px 24px 90px; }
+    .cat-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  /* CHAT */
+  .chat-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--white);
+    z-index: 200;
+    flex-direction: column;
+  }
+  .chat-screen.show { display: flex; }
+
+  .chat-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+
+  .chat-back {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .chat-back:hover { border-color: var(--black); }
+
+  .chat-header-info { flex: 1; }
+  .chat-header-name { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .chat-header-task { font-size: 12px; color: var(--mid); margin-top: 2px; }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--gray);
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 3px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg-date-divider {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mid);
+    margin: 12px 0 8px;
+  }
+
+  .msg-bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 75%;
+    gap: 2px;
+  }
+
+  .msg-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+
+  .msg-row.me { flex-direction: row-reverse; align-self: flex-end; }
+  .msg-row.them { align-self: flex-start; }
+
+  .msg-avatar-tiny {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .bubble.me {
+    background: var(--black);
+    color: var(--white);
+    border-bottom-right-radius: 4px;
+  }
+
+  .bubble.them {
+    background: var(--white);
+    color: var(--black);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .msg-time {
+    font-size: 10px;
+    color: var(--mid);
+    padding: 0 4px;
+    align-self: flex-end;
+  }
+
+  .chat-input-area {
+    padding: 10px 16px 16px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .chat-input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--gray);
+    border-radius: 24px;
+    padding: 8px 8px 8px 16px;
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input-row:focus-within {
+    border-color: var(--black);
+    background: var(--white);
+  }
+
+  .chat-textarea {
+    flex: 1;
+    border: none;
+    background: none;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    resize: none;
+    max-height: 100px;
+    line-height: 1.5;
+    padding: 4px 0;
+    color: var(--black);
+  }
+
+  .chat-textarea::placeholder { color: var(--mid); }
+
+  .chat-send-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--black);
+    color: var(--white);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .chat-send-btn:hover { background: var(--orange); }
+  .chat-send-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+  /* CHAT LIST IN MY TASKS */
+  .chat-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chat-list-item:hover { opacity: 0.75; }
+  .chat-unread-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+    flex-shrink: 0;
+  }
+
+  /* NOTIFICATION TOAST */
+  .notif-toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--black);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 9999;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .notif-toast.show { transform: translateX(-50%) translateY(0); }
+  .notif-icon { font-size: 20px; flex-shrink: 0; }
+  .dispute-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; justify-content:center; align-items:flex-end; }
+  .dispute-modal.show { display:flex; }
+  .dispute-sheet { background:var(--white); border-radius:24px 24px 0 0; padding:28px 24px 40px; width:100%; max-height:80vh; overflow-y:auto; animation:slideUp 0.3s ease; }
+  .location-dot { width:10px; height:10px; border-radius:50%; background:var(--success); display:inline-block; margin-right:6px; animation:pulse-dot 1.5s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.3);} }
+  .quote-price { font-family:"Space Grotesk",sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px; color:var(--orange); }
+
+  /* BADGES */
+  .badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--gray);
+    color: var(--black);
+    border: 1px solid var(--border);
+  }
+  .badge-chip.verified { background: #E5FFE5; color: #1A7A1A; border-color: #B0E8B0; }
+  .badge-chip.fast { background: #FFF0E8; color: var(--orange); border-color: #FFD0B0; }
+  .badge-chip.top { background: #FFFBE0; color: #9A7000; border-color: #FFD600; }
+  .badge-chip.new { background: #E8F0FF; color: #2040AA; border-color: #99AAFF; }
+
+  /* HELPER CARD IN FEED */
+  .helper-mini-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--gray);
+    border-radius: 12px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .helper-mini-card:hover { background: #EEEEE8; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+    justify-content: center;
+    align-items: flex-end;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet {
+    background: var(--white);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  /* REVIEW FEED */
+  .review-feed-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+  .review-feed-card:hover { border-color: var(--black); }
+  .review-stars { color: var(--yellow); font-size: 14px; letter-spacing: 1px; }
+  .review-text { font-size: 14px; color: var(--mid); line-height: 1.6; margin: 8px 0; }
+  .review-meta { font-size: 12px; color: var(--mid); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- AUTH SCREEN -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-card">
+    <div class="auth-logo">Kama<span>.</span></div>
+    <div class="auth-sub">Get anything done — name your price.</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Log in</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Sign up</button>
+    </div>
+
+    <div id="auth-error" class="auth-error"></div>
+    <div id="auth-success" class="auth-success"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@email.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Your password">
+      </div>
+      <button class="btn-auth" onclick="handleLogin()">Log in →</button>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signup-form" style="display:none">
+      <div class="form-group">
+        <label>Full name</label>
+        <input type="text" id="signup-name" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="you@email.com">
+      </div>
+      <div class="form-group">
+        <label>Phone number</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" value="+972" style="width:72px; flex-shrink:0; background:var(--gray); color:var(--mid);" readonly>
+          <input type="tel" id="signup-phone" placeholder="050 000 0000" style="flex:1;">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Min. 6 characters">
+      </div>
+      <div class="form-group">
+        <label>I want to...</label>
+        <div class="role-select-row">
+          <div class="role-opt selected" onclick="selectRole('poster', this)">
+            <div class="role-opt-icon">📋</div>
+            <div class="role-opt-label">Post Tasks</div>
+            <div class="role-opt-sub">I need help</div>
+          </div>
+          <div class="role-opt" onclick="selectRole('helper', this)">
+            <div class="role-opt-icon">⚡</div>
+            <div class="role-opt-label">Be a Helper</div>
+            <div class="role-opt-sub">I want to earn</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Region</label>
+        <select id="signup-region" onchange="updateCities()">
+          <option value="" disabled selected>Select region...</option>
+          <option value="Tel Aviv District">📍 Tel Aviv District</option>
+          <option value="Central District">📍 Central District</option>
+          <option value="Jerusalem District">📍 Jerusalem District</option>
+          <option value="Haifa District">📍 Haifa District</option>
+          <option value="Northern District">📍 Northern District</option>
+          <option value="Southern District">📍 Southern District</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>City</label>
+        <select id="signup-city" disabled>
+          <option value="" disabled selected>Select region first...</option>
+        </select>
+      </div>
+      <button class="btn-auth" onclick="handleSignup()">Create account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP SCREEN -->
+<div class="screen" id="screen-app">
+
+  <!-- NAV -->
+  <div class="app-nav">
+    <div class="nav-logo" onclick="goToPage('home')" style="cursor:pointer; user-select:none;">Kama<span>.</span></div>
+    <div class="nav-right">
+      <button class="btn-signout" onclick="handleSignout()">Sign out</button>
+      <div class="nav-avatar" id="nav-avatar" onclick="goToPage('profile')" style="cursor:pointer; user-select:none;">J</div>
+    </div>
+  </div>
+
+  <!-- CONTENT PAGES -->
+  <div class="app-content">
+
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page">
+      <div class="welcome-card">
+        <div class="welcome-greeting">Welcome back 👋</div>
+        <div class="welcome-name" id="home-name">Loading...</div>
+        <div class="welcome-stats">
+          <div>
+            <div class="wstat-val" id="home-tasks">0</div>
+            <div class="wstat-label">Tasks</div>
+          </div>
+          <div>
+            <div class="wstat-val" id="home-rating">—</div>
+            <div class="wstat-label">Rating</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <button class="qa-btn" onclick="goToPage('post')">
+          <span class="qa-icon">📋</span>
+          <span class="qa-label">Post a Task</span>
+          <span class="qa-sub">Name your price</span>
+        </button>
+        <button class="qa-btn" onclick="goToPage('feed')">
+          <span class="qa-icon">⚡</span>
+          <span class="qa-label">Find Tasks</span>
+          <span class="qa-sub">Earn money</span>
+        </button>
+        <button class="qa-btn" onclick="openQuote()">
+          <span class="qa-icon">💰</span>
+          <span class="qa-label">Get Quotes</span>
+          <span class="qa-sub">Compare offers</span>
+        </button>
+        <button class="qa-btn" onclick="goToPage('community')">
+          <span class="qa-icon">⭐</span>
+          <span class="qa-label">Reviews</span>
+          <span class="qa-sub">See community</span>
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div id="home-activity">
+          <div class="loading"><div class="spinner"></div>Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST TASK PAGE -->
+    <div id="page-post" class="page" style="display:none">
+      <div class="page-title">Post a Task</div>
+      <div class="page-sub">Describe what you need. Someone nearby will handle it.</div>
+
+      <div class="card">
+        <div class="card-title">Category</div>
+        <div class="cat-grid">
+          <div class="cat-btn selected" onclick="selectCat(this,'🧹','Cleaning')"><span class="cat-emoji">🧹</span><span class="cat-label">Clean</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🛒','Shopping')"><span class="cat-emoji">🛒</span><span class="cat-label">Shop</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🔧','Repairs')"><span class="cat-emoji">🔧</span><span class="cat-label">Fix</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'📦','Moving')"><span class="cat-emoji">📦</span><span class="cat-label">Move</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🐕','Pets')"><span class="cat-emoji">🐕</span><span class="cat-label">Pets</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🕐','Wait in Line')"><span class="cat-emoji">🕐</span><span class="cat-label">Wait</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🪑','Furniture')"><span class="cat-emoji">🪑</span><span class="cat-label">Furniture</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🚗','Errands')"><span class="cat-emoji">🚗</span><span class="cat-label">Errands</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'👶','Childcare')"><span class="cat-emoji">👶</span><span class="cat-label">Childcare</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'💻','Tech Help')"><span class="cat-emoji">💻</span><span class="cat-label">Tech</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'🪳','Pest Control')"><span class="cat-emoji">🪳</span><span class="cat-label">Pest</span></div>
+          <div class="cat-btn" onclick="selectCat(this,'✨','Other')"><span class="cat-emoji">✨</span><span class="cat-label">Other</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Details</div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="task-title" placeholder="e.g. Deep clean my apartment" maxlength="80">
+        </div>
+        <div class="form-group">
+          <label>Description <span style="font-weight:400; color:var(--mid)">(optional)</span></label>
+          <textarea id="task-desc" placeholder="Any extra details, specific requirements..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Photos <span style="font-weight:400; color:var(--mid)">(optional, max 4)</span></label>
+          <div id="photo-upload-area" style="border:2px dashed var(--border); border-radius:12px; padding:20px; text-align:center; cursor:pointer; background:var(--gray); transition:all 0.2s;" onclick="document.getElementById('photo-input').click()">
+            <div style="font-size:28px; margin-bottom:6px;">📸</div>
+            <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Tap to add photos</div>
+            <div style="font-size:12px; color:var(--mid);">Helps helpers understand the task</div>
+            <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+          </div>
+          <div id="photo-previews" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Location</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label>District</label>
+            <select id="task-district" onchange="updateTaskCities()">
+              <option value="" disabled selected>Select...</option>
+              <option>Tel Aviv District</option>
+              <option>Central District</option>
+              <option>Jerusalem District</option>
+              <option>Haifa District</option>
+              <option>Northern District</option>
+              <option>Southern District</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <select id="task-city" disabled>
+              <option value="" disabled selected>District first...</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Street</label>
+          <input type="text" id="task-street" placeholder="e.g. Rothschild Blvd">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label>No.</label>
+            <input type="text" id="task-street-no" placeholder="42">
+          </div>
+          <div class="form-group">
+            <label>Floor</label>
+            <input type="text" id="task-floor" placeholder="3">
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="task-type">
+              <option value="Apartment">Apartment</option>
+              <option value="House">House</option>
+              <option value="Work">Work</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Name / Buzzer <span style="font-weight:400; color:var(--mid)">(optional)</span></label>
+          <input type="text" id="task-name-buzzer" placeholder="e.g. Kim, Apt 5B">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Price & Timing</div>
+        <div class="form-group">
+          <label>Your offer</label>
+          <div class="price-wrap">
+            <span class="price-sym">₪</span>
+            <input type="number" id="task-price" placeholder="0" min="10">
+          </div>
+          <div class="price-chips">
+            <div class="pchip" onclick="setPrice(50)">₪50</div>
+            <div class="pchip" onclick="setPrice(100)">₪100</div>
+            <div class="pchip" onclick="setPrice(150)">₪150</div>
+            <div class="pchip" onclick="setPrice(200)">₪200</div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:20px">
+          <label>When do you need it?</label>
+          <div class="urgency-row" style="margin-bottom:12px;">
+            <div class="urg-btn selected" onclick="selectUrgency(this,'ASAP'); document.getElementById('task-datetime-wrap').style.display='none'"><div class="urg-icon">🔥</div><span class="urg-label">Right now</span></div>
+            <div class="urg-btn" onclick="selectUrgency(this,'Scheduled'); document.getElementById('task-datetime-wrap').style.display='block'"><div class="urg-icon">📅</div><span class="urg-label">Pick date & time</span></div>
+          </div>
+          <div id="task-datetime-wrap" style="display:none;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="task-date" min="">
+              </div>
+              <div class="form-group">
+                <label>Time</label>
+                <input type="time" id="task-time">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="submitTask()">Post Task 🚀</button>
+    </div>
+
+    <!-- FEED PAGE -->
+    <div id="page-feed" class="page" style="display:none">
+      <div class="page-title">Find Tasks</div>
+
+      <!-- FILTER BAR -->
+      <div style="margin-bottom:16px;">
+
+        <!-- ACTIVE FILTER PILLS + FILTER BUTTON ROW -->
+        <div style="display:flex; gap:8px; align-items:center; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;">
+          <button onclick="toggleFilterPanel()" id="filter-toggle-btn"
+            style="display:flex; align-items:center; gap:6px; padding:9px 16px; border:1.5px solid var(--border); border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif; white-space:nowrap; flex-shrink:0; transition:all 0.2s;">
+            <span>⚙️</span> <span id="filter-btn-label">Filter</span>
+          </button>
+          <div id="active-filter-pills" style="display:flex; gap:6px; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;"></div>
+        </div>
+
+        <!-- EXPANDABLE FILTER PANEL -->
+        <div id="filter-panel" style="display:none; background:var(--white); border-radius:16px; padding:20px; border:1px solid var(--border); margin-top:10px; animation:fadeIn 0.2s ease;">
+
+          <!-- CATEGORY -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">Category</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-cats">
+              <div class="fchip active" onclick="toggleCatFilter(this,'')">All</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Cleaning')">🧹 Cleaning</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Shopping')">🛒 Shopping</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Repairs')">🔧 Repairs</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Moving')">📦 Moving</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Pets')">🐕 Pets</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Wait in Line')">🕐 Wait in line</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Furniture')">🪑 Furniture</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Errands')">🚗 Errands</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Tech Help')">💻 Tech</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Pest Control')">🪳 Pest</div>
+              <div class="fchip" onclick="toggleCatFilter(this,'Other')">✨ Other</div>
+            </div>
+          </div>
+
+          <div style="height:1px; background:var(--border); margin-bottom:16px;"></div>
+
+          <!-- PRICE + DATE ROW -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">Min. Price</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-prices">
+                <div class="fchip active" onclick="togglePriceFilter(this,0)">Any</div>
+                <div class="fchip" onclick="togglePriceFilter(this,50)">₪50+</div>
+                <div class="fchip" onclick="togglePriceFilter(this,100)">₪100+</div>
+                <div class="fchip" onclick="togglePriceFilter(this,200)">₪200+</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">Posted</div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-dates">
+                <div class="fchip active" onclick="toggleDateFilter(this,0)">Any</div>
+                <div class="fchip" onclick="toggleDateFilter(this,1)">Today</div>
+                <div class="fchip" onclick="toggleDateFilter(this,3)">3 days</div>
+                <div class="fchip" onclick="toggleDateFilter(this,7)">Week</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:1px; background:var(--border); margin-bottom:16px;"></div>
+
+          <!-- DISTRICT -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--mid); margin-bottom:10px;">District</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;" id="filter-districts">
+              <div class="fchip active" onclick="toggleDistrictFilter(this,'')">All</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Tel Aviv')">Tel Aviv</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Central')">Central</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Jerusalem')">Jerusalem</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Haifa')">Haifa</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Northern')">North</div>
+              <div class="fchip" onclick="toggleDistrictFilter(this,'Southern')">South</div>
+            </div>
+          </div>
+
+          <!-- CLEAR + APPLY -->
+          <div style="display:flex; gap:10px;">
+            <button onclick="clearFilters()" style="flex:1; padding:12px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif;">Clear all</button>
+            <button onclick="toggleFilterPanel()" style="flex:2; padding:12px; background:var(--black); color:var(--white); border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif;">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-sub" id="feed-count">Loading tasks...</div>
+      <div id="feed-list">
+        <div class="loading"><div class="spinner"></div>Finding tasks...</div>
+      </div>
+    </div>
+
+    <!-- MY TASKS PAGE -->
+    <div id="page-mytasks" class="page" style="display:none">
+      <div class="page-title">My Tasks</div>
+      <div class="page-sub">Everything you've posted</div>
+      <div id="mytasks-list">
+        <div class="loading"><div class="spinner"></div>Loading your tasks...</div>
+      </div>
+    </div>
+
+    <!-- COMMUNITY / REVIEW FEED PAGE -->
+    <div id="page-community" class="page" style="display:none">
+      <div class="page-title">Reviews</div>
+      <div class="page-sub">What people are saying about Kama helpers</div>
+
+      <!-- SORT -->
+      <div style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;">
+        <div class="fchip active" onclick="filterReviews(this,'all')" style="flex-shrink:0;">All</div>
+        <div class="fchip" onclick="filterReviews(this,'5')" style="flex-shrink:0;">⭐⭐⭐⭐⭐</div>
+        <div class="fchip" onclick="filterReviews(this,'4')" style="flex-shrink:0;">⭐⭐⭐⭐+</div>
+        <div class="fchip" onclick="filterReviews(this,'Cleaning')" style="flex-shrink:0;">🧹 Clean</div>
+        <div class="fchip" onclick="filterReviews(this,'Pest Control')" style="flex-shrink:0;">🪳 Pest</div>
+        <div class="fchip" onclick="filterReviews(this,'Pets')" style="flex-shrink:0;">🐕 Pets</div>
+      </div>
+
+      <div id="community-list">
+        <div class="loading"><div class="spinner"></div>Loading reviews...</div>
+      </div>
+    </div>
+
+    <!-- HELPER PROFILE MODAL -->
+    <div class="modal-overlay" id="helper-modal">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+
+        <!-- HEADER -->
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+          <div id="modal-avatar" style="width:64px; height:64px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; flex-shrink:0;">J</div>
+          <div style="flex:1;">
+            <div id="modal-name" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">—</div>
+            <div id="modal-role" style="font-size:13px; color:var(--mid);">—</div>
+          </div>
+          <button onclick="closeHelperModal()" style="width:36px; height:36px; border-radius:50%; border:1.5px solid var(--border); background:var(--white); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;">✕</button>
+        </div>
+
+        <!-- STATS -->
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px;">
+          <div style="background:var(--white); padding:14px; text-align:center;">
+            <div id="modal-rating" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-1px;">—</div>
+            <div style="font-size:11px; color:var(--mid); margin-top:2px;">Rating</div>
+          </div>
+          <div style="background:var(--white); padding:14px; text-align:center;">
+            <div id="modal-tasks" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-1px;">0</div>
+            <div style="font-size:11px; color:var(--mid); margin-top:2px;">Tasks done</div>
+          </div>
+          <div style="background:var(--white); padding:14px; text-align:center;">
+            <div id="modal-rank" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-1px;">—</div>
+            <div style="font-size:11px; color:var(--mid); margin-top:2px;">Rank</div>
+          </div>
+        </div>
+
+        <!-- BADGES -->
+        <div id="modal-badges" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px;"></div>
+
+        <!-- BIO -->
+        <div id="modal-bio" style="font-size:14px; color:var(--mid); line-height:1.7; margin-bottom:20px; padding:14px; background:var(--gray); border-radius:12px;"></div>
+
+        <!-- REVIEWS -->
+        <div style="font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--mid); margin-bottom:12px;">Recent Reviews</div>
+        <div id="modal-reviews"></div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="page-profile" class="page" style="display:none">
+      <div class="profile-hero">
+        <div class="profile-avatar-big" id="profile-avatar">J</div>
+        <div class="profile-name-big" id="profile-name">Loading...</div>
+        <div class="profile-role" id="profile-role">—</div>
+        <div class="profile-stats">
+          <div>
+            <div class="pstat-val" id="profile-tasks">0</div>
+            <div class="pstat-label">Tasks</div>
+          </div>
+          <div>
+            <div class="pstat-val" id="profile-rating">—</div>
+            <div class="pstat-label">Rating</div>
+          </div>
+          <div>
+            <div class="pstat-val" id="profile-city">—</div>
+            <div class="pstat-label">City</div>
+          </div>
+        </div>
+        <div id="my-badges" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:16px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Account Details</span>
+          <button onclick="toggleEditProfile()" id="edit-profile-btn" style="padding:6px 14px; border:1.5px solid var(--border); border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif; transition:all 0.2s;">✏️ Edit</button>
+        </div>
+
+        <!-- VIEW MODE -->
+        <div id="profile-view">
+          <div style="font-size:14px; line-height:2; color:var(--mid);">
+            <div>👤 <span id="profile-name-view">—</span></div>
+            <div>📧 <span id="profile-email">—</span></div>
+            <div>📱 <span id="profile-phone-view">—</span></div>
+            <div>📍 <span id="profile-city2">—</span></div>
+            <div>🎭 Role: <span id="profile-role2">—</span></div>
+          </div>
+        </div>
+
+        <!-- EDIT MODE -->
+        <div id="profile-edit" style="display:none;">
+          <div class="form-group">
+            <label>Full name</label>
+            <input type="text" id="edit-name" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" value="+972" style="width:72px; flex-shrink:0; background:var(--gray); color:var(--mid);" readonly>
+              <input type="tel" id="edit-phone" placeholder="050 000 0000" style="flex:1;">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>District</label>
+            <select id="edit-district" onchange="updateEditCities()">
+              <option value="" disabled selected>Select...</option>
+              <option>Tel Aviv District</option>
+              <option>Central District</option>
+              <option>Jerusalem District</option>
+              <option>Haifa District</option>
+              <option>Northern District</option>
+              <option>Southern District</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <select id="edit-city" disabled>
+              <option value="" disabled selected>Select district first...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="edit-role">
+              <option value="poster">Task Poster</option>
+              <option value="helper">Kama Helper</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button onclick="toggleEditProfile()" style="flex:1; padding:12px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; background:var(--white); font-family:'Inter',sans-serif;">Cancel</button>
+            <button onclick="saveProfile()" style="flex:2; padding:12px; background:var(--black); color:var(--white); border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Space Grotesk',sans-serif; transition:all 0.2s;">Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="background:var(--black); margin-top:8px;" onclick="handleSignout()">Sign Out</button>
+    </div>
+
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div class="chat-screen" id="chat-screen">
+    <div class="chat-nav">
+      <button class="chat-back" onclick="closeChat()">←</button>
+      <div style="width:38px; height:38px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; flex-shrink:0;" id="chat-other-avatar">?</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="chat-other-name">—</div>
+        <div class="chat-header-task" id="chat-task-label">—</div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="loading"><div class="spinner"></div>Loading messages...</div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="chat-input-row">
+        <textarea class="chat-textarea" id="chat-input" placeholder="Type a message..." rows="1"
+          oninput="autoResizeChat(this); toggleChatSend()"
+          onkeydown="handleChatKey(event)"></textarea>
+        <button class="chat-send-btn" id="chat-send" onclick="sendChatMessage()" disabled>↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION TOAST -->
+  <div class="notif-toast" id="notif-toast" onclick="handleNotifClick()">
+    <span class="notif-icon" id="notif-icon">🔔</span>
+    <div>
+      <div id="notif-title" style="font-weight:700; margin-bottom:2px;">—</div>
+      <div id="notif-body" style="font-size:12px; opacity:0.7;">—</div>
+    </div>
+  </div>
+
+  <!-- DISPUTE MODAL -->
+  <div class="dispute-modal" id="dispute-modal">
+    <div class="dispute-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;">Report an Issue</div>
+      <div style="font-size:14px;color:var(--mid);margin-bottom:20px;">Tell us what went wrong. We review all reports within 24 hours.</div>
+      <div class="form-group">
+        <label>Issue type</label>
+        <select id="dispute-type">
+          <option value="not_completed">Task not completed properly</option>
+          <option value="no_show">Helper did not show up</option>
+          <option value="damage">Property damage</option>
+          <option value="payment">Payment issue</option>
+          <option value="behaviour">Inappropriate behaviour</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="dispute-desc" placeholder="Describe what happened..." style="min-height:100px;"></textarea>
+      </div>
+      <div style="background:#FFF5E8;border:1px solid #FFD0A0;border-radius:12px;padding:12px 16px;font-size:13px;color:#8A5000;margin-bottom:20px;">
+        Payment will be held until resolved. Average resolution: 24-48 hours.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeDispute()" style="flex:1;padding:14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;background:var(--white);">Cancel</button>
+        <button onclick="submitDispute()" style="flex:2;padding:14px;background:var(--error);color:var(--white);border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE MODAL -->
+  <div class="dispute-modal" id="quote-modal">
+    <div class="dispute-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;">Request a Quote</div>
+      <div style="font-size:14px;color:var(--mid);margin-bottom:20px;">Not sure about the price? Let helpers send you offers.</div>
+      <div class="form-group"><label>Task title</label><input type="text" id="quote-title" placeholder="e.g. Fix my leaking tap"></div>
+      <div class="form-group"><label>Description</label><textarea id="quote-desc" placeholder="Describe in detail..." style="min-height:80px;"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label>Category</label><select id="quote-cat"><option>Cleaning</option><option>Repairs</option><option>Moving</option><option>Furniture</option><option>Tech Help</option><option>Other</option></select></div>
+        <div class="form-group"><label>Max budget</label><div class="price-wrap"><span class="price-sym">&#8362;</span><input type="number" id="quote-budget" placeholder="500" style="padding-left:36px;"></div></div>
+      </div>
+      <div class="form-group"><label>Location</label><input type="text" id="quote-location" placeholder="Tel Aviv, Florentine"></div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button onclick="closeQuote()" style="flex:1;padding:14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;background:var(--white);">Cancel</button>
+        <button onclick="submitQuote()" style="flex:2;padding:14px;background:var(--orange);color:var(--white);border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Send Request</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="bnav-item active" onclick="goToPage('home')" id="bnav-home">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">Home</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('feed')" id="bnav-feed">
+      <span class="bnav-icon">⚡</span>
+      <span class="bnav-label">Find Tasks</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('post')" id="bnav-post">
+      <span class="bnav-icon">➕</span>
+      <span class="bnav-label">Post</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('mytasks')" id="bnav-mytasks">
+      <span class="bnav-icon">📋</span>
+      <span class="bnav-label">My Tasks</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('community')" id="bnav-community">
+      <span class="bnav-icon">⭐</span>
+      <span class="bnav-label">Reviews</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('profile')" id="bnav-profile">
+      <span class="bnav-icon">👤</span>
+      <span class="bnav-label">Profile</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // ─── SUPABASE INIT ───
+  const SUPA_URL = 'https://dinmlrogalwcxdznmruc.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpbm1scm9nYWx3Y3hkem5tcnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NjI4NDAsImV4cCI6MjA5NzAzODg0MH0.uk4rdmlX843nYSKXyS-myRWXJoyHEdy6XpgukjpaTpo';
+  const { createClient } = supabase;
+  const sb = createClient(SUPA_URL, SUPA_KEY);
+
+  // ─── STATE ───
+  let currentUser = null;
+  let currentProfile = null;
+  let selectedRole = 'poster';
+  let selectedCat = { emoji: '🪳', label: 'Pest Control' };
+  let selectedUrgency = 'ASAP';
+
+  // ─── INIT ───
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      await loadProfile();
+      showApp();
+    }
+
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        currentUser = session.user;
+        await loadProfile();
+        showApp();
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+        currentProfile = null;
+        showAuth();
+      }
+    });
+  }
+
+  // ─── AUTH ───
+  function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+    clearAuthMessages();
+  }
+
+  function selectRole(role, el) {
+    selectedRole = role;
+    document.querySelectorAll('.role-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return showError('Please fill in all fields.');
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) return showError(error.message);
+  }
+
+  async function handleSignup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const city = document.getElementById('signup-city').value;
+
+    if (!name || !email || !password) return showError('Please fill in all fields.');
+    if (password.length < 6) return showError('Password must be at least 6 characters.');
+
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if (error) return showError(error.message);
+
+    if (data.user) {
+      // Store signup data in localStorage to create profile after email confirmation
+      const phone = document.getElementById('signup-phone')?.value || '';
+      localStorage.setItem('kama_pending_profile', JSON.stringify({
+        name, email, city, phone,
+        role: selectedRole
+      }));
+      showSuccess('Account created! Check your email to confirm, then log in.');
+    }
+  }
+
+  async function handleSignout() {
+    await sb.auth.signOut();
+  }
+
+  // ─── PROFILE ───
+  async function loadProfile() {
+    let { data } = await sb.from('users').select('*').eq('id', currentUser.id).single();
+    if (!data) {
+      // Check if we have pending profile data from signup
+      const pending = localStorage.getItem('kama_pending_profile');
+      let profileData = { name: currentUser.email.split('@')[0], role: 'poster', city: 'Tel Aviv' };
+      if (pending) {
+        try { profileData = { ...profileData, ...JSON.parse(pending) }; } catch(e) {}
+        localStorage.removeItem('kama_pending_profile');
+      }
+      const res = await sb.from('users').insert({
+        id: currentUser.id,
+        name: profileData.name,
+        email: currentUser.email,
+        phone: profileData.phone || '',
+        city: profileData.city || 'Tel Aviv',
+        role: profileData.role,
+        rating: 0,
+        total_reviews: 0,
+        tasks_completed: 0,
+        rank: 'bronze'
+      }).select().single();
+      data = res.data;
+    }
+    currentProfile = data;
+    updateUI();
+  }
+
+  function updateUI() {
+    if (!currentProfile) return;
+    const name = currentProfile.name || currentUser.email;
+    const initial = name[0].toUpperCase();
+
+    document.getElementById('nav-avatar').textContent = initial;
+    document.getElementById('home-name').textContent = name.split(' ')[0] + ' 👋';
+    document.getElementById('home-tasks').textContent = currentProfile.tasks_completed || 0;
+    document.getElementById('home-rating').textContent = currentProfile.rating > 0 ? currentProfile.rating.toFixed(1) + '★' : '—';
+
+    document.getElementById('profile-avatar').textContent = initial;
+    document.getElementById('profile-name').textContent = name;
+    document.getElementById('profile-role').textContent = currentProfile.role === 'helper' ? '⚡ Kama Helper' : '📋 Task Poster';
+    document.getElementById('profile-email').textContent = currentUser.email;
+    document.getElementById('profile-city').textContent = currentProfile.city || '—';
+    document.getElementById('profile-city2').textContent = currentProfile.city || '—';
+    document.getElementById('profile-role2').textContent = currentProfile.role || '—';
+    document.getElementById('profile-tasks').textContent = currentProfile.tasks_completed || 0;
+    document.getElementById('profile-rating').textContent = currentProfile.rating > 0 ? currentProfile.rating.toFixed(1) + '★' : '—';
+    const nameView = document.getElementById('profile-name-view');
+    if (nameView) nameView.textContent = name;
+    const phoneView = document.getElementById('profile-phone-view');
+    if (phoneView) phoneView.textContent = currentProfile.phone ? '+972 ' + currentProfile.phone : '—';
+    if (currentProfile.role === 'helper') {
+      renderBadges(getHelperBadges(currentProfile), 'my-badges');
+    }
+  }
+
+  // ─── SCREENS ───
+  function showApp() {
+    document.getElementById('screen-auth').classList.remove('active');
+    document.getElementById('screen-app').classList.add('active');
+    goToPage('home');
+    loadHomeActivity();
+    prefillLocation();
+    requestNotificationPermission();
+    setTimeout(subscribeToTaskUpdates, 1000);
+  }
+
+  function prefillLocation() {
+    if (!currentProfile) return;
+    // Try to match city to district
+    const districtSelect = document.getElementById('task-district');
+    if (!districtSelect) return;
+    for (const [district, cities] of Object.entries(cityData)) {
+      if (cities.includes(currentProfile.city)) {
+        districtSelect.value = district;
+        updateTaskCities();
+        setTimeout(() => {
+          const citySelect = document.getElementById('task-city');
+          if (citySelect) citySelect.value = currentProfile.city;
+        }, 100);
+        break;
+      }
+    }
+  }
+
+  function showAuth() {
+    document.getElementById('screen-app').classList.remove('active');
+    document.getElementById('screen-auth').classList.add('active');
+  }
+
+  // ─── NAVIGATION ───
+  function goToPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).style.display = 'block';
+    const bnav = document.getElementById('bnav-' + page);
+    if (bnav) bnav.classList.add('active');
+
+    if (page === 'feed') loadFeed();
+    if (page === 'mytasks') loadMyTasks();
+    if (page === 'community') loadCommunity();
+  }
+
+  // ─── HOME ───
+  async function loadHomeActivity() {
+    const el = document.getElementById('home-activity');
+    const { data: tasks } = await sb.from('tasks')
+      .select('*')
+      .eq('poster_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    if (!tasks || tasks.length === 0) {
+      el.innerHTML = '<div style="font-size:14px; color:var(--mid); text-align:center; padding:16px;">No activity yet. Post your first task! 🚀</div>';
+      return;
+    }
+
+    el.innerHTML = tasks.map(t => `
+      <div style="padding:12px 0; border-bottom:1px solid var(--border); font-size:14px;">
+        <div style="font-weight:700; margin-bottom:3px;">${t.title}</div>
+        <div style="color:var(--mid); font-size:12px;">₪${t.price} · ${t.status} · ${t.category}</div>
+      </div>
+    `).join('');
+  }
+
+  // ─── POST TASK ───
+  const catPlaceholders = {
+    'Cleaning': 'e.g. Deep clean my kitchen and bathroom',
+    'Shopping': 'e.g. Pick up groceries from Rami Levy',
+    'Repairs': 'e.g. Fix leaking tap in bathroom',
+    'Moving': 'e.g. Help move boxes to 3rd floor',
+    'Pets': 'e.g. Walk my golden retriever for 45 min',
+    'Wait in Line': 'e.g. Wait at the post office for me',
+    'Furniture': 'e.g. Assemble IKEA PAX wardrobe',
+    'Errands': 'e.g. Drop off a package at the post office',
+    'Childcare': 'e.g. Babysit for 2 hours this evening',
+    'Tech Help': 'e.g. Set up my new printer',
+    'Pest Control': 'e.g. There is a cockroach in my bathroom',
+    'Other': 'e.g. Describe what you need done'
+  };
+
+  function selectCat(el, emoji, label) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedCat = { emoji, label };
+    const titleInput = document.getElementById('task-title');
+    if (titleInput) titleInput.placeholder = catPlaceholders[label] || 'e.g. Describe your task';
+  }
+
+  function selectUrgency(el, val) {
+    document.querySelectorAll('.urg-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedUrgency = val;
+  }
+
+  function setPrice(val) {
+    document.getElementById('task-price').value = val;
+    document.querySelectorAll('.pchip').forEach(c => c.classList.remove('selected'));
+    event.target.classList.add('selected');
+  }
+
+  function handlePhotos(event) {
+    const files = Array.from(event.target.files).slice(0, 4);
+    const container = document.getElementById('photo-previews');
+    container.innerHTML = '';
+    files.forEach((file, i) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'position:relative; width:70px; height:70px;';
+        div.innerHTML = `<img src="${e.target.result}" style="width:70px;height:70px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
+          <button onclick="this.parentNode.remove()" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,0.6);color:white;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+        container.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updateTaskCities() {
+    const district = document.getElementById('task-district').value;
+    const citySelect = document.getElementById('task-city');
+    citySelect.disabled = false;
+    citySelect.innerHTML = '<option value="" disabled selected>Select city...</option>';
+    if (cityData[district]) {
+      cityData[district].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+    }
+  }
+
+  async function submitTask() {
+    const title = document.getElementById('task-title').value.trim();
+    const desc = document.getElementById('task-desc').value.trim();
+    const district = document.getElementById('task-district').value;
+    const city = document.getElementById('task-city').value;
+    const street = document.getElementById('task-street').value.trim();
+    const streetNo = document.getElementById('task-street-no').value.trim();
+    const floor = document.getElementById('task-floor').value.trim();
+    const type = document.getElementById('task-type').value;
+    const nameBuzzer = document.getElementById('task-name-buzzer').value.trim();
+    const price = parseFloat(document.getElementById('task-price').value);
+
+    const locationParts = [city || district, street, streetNo, floor ? `Floor ${floor}` : '', type, nameBuzzer].filter(Boolean);
+    const location = locationParts.join(', ') || district;
+
+    if (!title) return showToast('Please add a title', 'error');
+    if (!price || price < 10) return showToast('Minimum price is ₪10', 'error');
+    if (!district) return showToast('Please select a district', 'error');
+
+    let urgencyText = selectedUrgency;
+    if (selectedUrgency === 'Scheduled') {
+      const date = document.getElementById('task-date').value;
+      const time = document.getElementById('task-time').value;
+      if (date) urgencyText = `${date}${time ? ' at ' + time : ''}`;
+    }
+
+    const { error } = await sb.from('tasks').insert({
+      poster_id: currentUser.id,
+      title,
+      description: desc,
+      category: selectedCat.label,
+      price,
+      urgency: urgencyText,
+      location,
+      status: 'live'
+    });
+
+    if (error) return showToast('Error posting task', 'error');
+
+    showToast('Task posted! 🚀', 'success');
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-desc').value = '';
+    document.getElementById('task-location').value = '';
+    document.getElementById('task-price').value = '';
+    goToPage('mytasks');
+  }
+
+  // ─── FEED FILTERS ───
+  let filterCat = '';
+  let filterPrice = 0;
+  let filterDistrict = '';
+  let filterDays = 0;
+
+  function toggleFilterPanel() {
+    const panel = document.getElementById('filter-panel');
+    const btn = document.getElementById('filter-toggle-btn');
+    const isOpen = panel.style.display === 'block';
+    panel.style.display = isOpen ? 'none' : 'block';
+    btn.style.background = isOpen ? 'var(--white)' : 'var(--black)';
+    btn.style.color = isOpen ? 'var(--black)' : 'var(--white)';
+    btn.style.borderColor = isOpen ? 'var(--border)' : 'var(--black)';
+  }
+
+  function updateActivePills() {
+    const pills = document.getElementById('active-filter-pills');
+    if (!pills) return;
+    pills.innerHTML = '';
+    const activeFilters = [];
+    if (filterCat) activeFilters.push({ label: filterCat, clear: () => { filterCat = ''; document.querySelectorAll('#filter-cats .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+    if (filterPrice > 0) activeFilters.push({ label: '₪'+filterPrice+'+', clear: () => { filterPrice = 0; document.querySelectorAll('#filter-prices .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+    if (filterDistrict) activeFilters.push({ label: filterDistrict, clear: () => { filterDistrict = ''; document.querySelectorAll('#filter-districts .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+    if (filterDays > 0) activeFilters.push({ label: filterDays === 1 ? 'Today' : filterDays+'d', clear: () => { filterDays = 0; document.querySelectorAll('#filter-dates .fchip').forEach((c,i) => c.classList.toggle('active', i===0)); updateActivePills(); loadFeed(); }});
+
+    activeFilters.forEach(f => {
+      const pill = document.createElement('div');
+      pill.style.cssText = 'display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--black); color:var(--white); border-radius:100px; font-size:12px; font-weight:700; white-space:nowrap; flex-shrink:0; cursor:pointer;';
+      pill.innerHTML = f.label + ' ✕';
+      pill.onclick = f.clear;
+      pills.appendChild(pill);
+    });
+
+    // Update button label
+    const btn = document.getElementById('filter-btn-label');
+    if (btn) btn.textContent = activeFilters.length > 0 ? `Filter (${activeFilters.length})` : 'Filter';
+  }
+
+  function toggleCatFilter(el, val) {
+    document.querySelectorAll('#filter-cats .fchip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filterCat = val;
+    updateActivePills();
+    loadFeed();
+  }
+
+  function togglePriceFilter(el, val) {
+    document.querySelectorAll('#filter-prices .fchip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filterPrice = val;
+    updateActivePills();
+    loadFeed();
+  }
+
+  function toggleDistrictFilter(el, val) {
+    document.querySelectorAll('#filter-districts .fchip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filterDistrict = val;
+    updateActivePills();
+    loadFeed();
+  }
+
+  function toggleDateFilter(el, val) {
+    document.querySelectorAll('#filter-dates .fchip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filterDays = val;
+    updateActivePills();
+    loadFeed();
+  }
+
+  function clearFilters() {
+    filterCat = ''; filterPrice = 0; filterDistrict = ''; filterDays = 0;
+    document.querySelectorAll('#filter-cats .fchip').forEach((c,i) => c.classList.toggle('active', i===0));
+    document.querySelectorAll('#filter-prices .fchip').forEach((c,i) => c.classList.toggle('active', i===0));
+    document.querySelectorAll('#filter-districts .fchip').forEach((c,i) => c.classList.toggle('active', i===0));
+    document.querySelectorAll('#filter-dates .fchip').forEach((c,i) => c.classList.toggle('active', i===0));
+    updateActivePills();
+    loadFeed();
+  }
+
+  // ─── FEED ───
+  async function loadFeed() {
+    const el = document.getElementById('feed-list');
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Finding tasks...</div>';
+
+    let query = sb.from('tasks')
+      .select('*, users!poster_id(name, rating)')
+      .eq('status', 'live')
+      .neq('poster_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (filterCat) query = query.eq('category', filterCat);
+    if (filterPrice > 0) query = query.gte('price', filterPrice);
+    if (filterDistrict) query = query.ilike('location', '%' + filterDistrict + '%');
+    if (filterDays > 0) {
+      const since = new Date();
+      since.setDate(since.getDate() - filterDays);
+      query = query.gte('created_at', since.toISOString());
+    }
+
+    const { data: tasks } = await query;
+
+    if (!tasks || tasks.length === 0) {
+      document.getElementById('feed-count').textContent = 'No tasks available right now';
+      el.innerHTML = `<div class="empty"><div class="empty-icon">😴</div><div class="empty-title">No tasks nearby</div><div class="empty-sub">Check back soon or expand your area</div></div>`;
+      return;
+    }
+
+    document.getElementById('feed-count').textContent = `${tasks.length} task${tasks.length !== 1 ? 's' : ''} available`;
+
+    el.innerHTML = tasks.map(t => `
+      <div class="task-card ${t.urgency === 'ASAP' ? 'urgent' : ''}">
+        <div class="task-card-top">
+          <div style="flex:1">
+            <div class="task-badges">
+              <span class="badge badge-cat">${t.category}</span>
+              ${t.urgency === 'ASAP' ? '<span class="badge badge-urgent">🔥 ASAP</span>' : ''}
+              <span class="badge badge-new">New</span>
+            </div>
+            <div class="task-title">${t.title}</div>
+            <div class="task-meta">
+              <span>📍 ${t.location}</span>
+              <span>⏰ ${t.urgency}</span>
+            </div>
+          </div>
+          <div class="task-price">₪${t.price}</div>
+        </div>
+        ${t.description ? `<div style="font-size:13px; color:var(--mid); margin-bottom:8px; line-height:1.5;">${t.description.substring(0, 100)}${t.description.length > 100 ? '...' : ''}</div>` : ''}
+        <div style="display:flex; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
+          <div class="helper-mini-card" style="flex:1; margin-top:0;" onclick="openHelperModal('${t.poster_id}')">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${(t.users?.name || '?')[0].toUpperCase()}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px; font-weight:700;">${t.users?.name || 'User'}</div>
+              <div style="font-size:11px; color:var(--mid);">${t.users?.rating > 0 ? t.users.rating.toFixed(1) + '★' : 'New'} · Tap to view profile</div>
+            </div>
+          </div>
+        </div>
+        <div class="task-actions" style="margin-top:8px; padding-top:0; border-top:none;">
+          <button class="btn-skip" onclick="this.closest('.task-card').remove(); updateFeedCount()">Skip</button>
+          <button class="btn-accept" onclick="acceptTask('${t.id}', this)">Accept ₪${t.price} →</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateFeedCount() {
+    const remaining = document.querySelectorAll('#feed-list .task-card').length;
+    document.getElementById('feed-count').textContent = `${remaining} task${remaining !== 1 ? 's' : ''} available`;
+  }
+
+  async function acceptTask(taskId, btn) {
+    const { error } = await sb.from('tasks').update({
+      helper_id: currentUser.id,
+      status: 'matched'
+    }).eq('id', taskId);
+
+    if (error) return showToast('Error accepting task', 'error');
+
+    btn.closest('.task-card').style.opacity = '0.5';
+    btn.textContent = '✅ Accepted!';
+    btn.disabled = true;
+    showToast('Task accepted! 💪', 'success');
+    showNotification('✅ Task accepted!', 'Chat with the poster to coordinate', () => {
+      openChat(taskId, t.poster_id, t.users?.name || 'Poster', t.title);
+    });
+
+    if (currentProfile) {
+      await sb.from('users').update({
+        tasks_completed: (currentProfile.tasks_completed || 0) + 1
+      }).eq('id', currentUser.id);
+      await loadProfile();
+    }
+  }
+
+  // ─── MY TASKS ───
+  async function loadMyTasks() {
+    const el = document.getElementById('mytasks-list');
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+    const { data: tasks } = await sb.from('tasks')
+      .select('*')
+      .eq('poster_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (!tasks || tasks.length === 0) {
+      el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No tasks yet</div><div class="empty-sub">Post your first task to get started</div></div>`;
+      return;
+    }
+
+    el.innerHTML = tasks.map(t => `
+      <div class="mytask-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:8px;">
+          <div style="flex:1">
+            <div style="font-size:12px; color:var(--mid); margin-bottom:4px;">
+              <span class="status-dot status-${t.status}"></span>
+              ${t.status.toUpperCase()} · ${t.category}
+            </div>
+            <div style="font-weight:700; font-size:15px; margin-bottom:4px;">${t.title}</div>
+            <div style="font-size:13px; color:var(--mid);">📍 ${t.location} · ⏰ ${t.urgency}</div>
+          </div>
+          <div style="font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:800; flex-shrink:0;">₪${t.price}</div>
+        </div>
+        ${t.status === 'live' ? `<div style="font-size:12px; color:var(--orange); font-weight:600; margin-top:8px;">🟠 Waiting for a helper...</div>` : ''}
+        ${t.status === 'matched' ? `<div style="font-size:12px; color:var(--success); font-weight:600; margin-top:8px;">✅ Helper is on the way!</div>` : ''}
+        ${t.status === 'completed' ? `<div style="font-size:12px; color:var(--mid); font-weight:600; margin-top:8px;">✓ Completed</div>` : ''}
+        ${t.status === 'matched' && t.helper_id ? `
+          <div style="background:var(--gray);border-radius:12px;padding:12px;margin-top:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="font-size:13px;font-weight:600;"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;margin-right:6px;"></span>Helper on the way</div>
+              <div style="font-size:12px;color:var(--mid);">~5-10 min</div>
+            </div>
+            <div style="background:var(--white);border-radius:10px;height:70px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mid);cursor:pointer;border:1px solid var(--border);" onclick="showNotification('Live tracking coming soon!','Your helper location will appear here')">📍 Live tracking coming soon</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="openChat('${t.id}', '${t.helper_id}', 'Your helper', '${t.title}')" style="flex:1;padding:10px;background:var(--black);color:var(--white);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">💬 Chat</button>
+            <button onclick="openDispute('${t.id}')" style="padding:10px 16px;background:var(--white);color:var(--error);border:1.5px solid var(--error);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">⚠️</button>
+          </div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ─── HELPERS ───
+  function showError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('auth-success');
+    el.textContent = msg;
+    el.style.display = 'block';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  function clearAuthMessages() {
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('auth-success').style.display = 'none';
+  }
+
+  function showToast(msg, type = '') {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ─── HELPER BADGES ───
+  function getHelperBadges(profile) {
+    const badges = [];
+    if (profile.phone) badges.push({ label: '📱 Phone verified', cls: 'verified' });
+    badges.push({ label: '🪪 ID verified', cls: 'verified' });
+    if (profile.tasks_completed >= 20) badges.push({ label: '🏆 Top Helper', cls: 'top' });
+    else if (profile.tasks_completed >= 5) badges.push({ label: '⚡ Active Helper', cls: 'fast' });
+    else badges.push({ label: '🌟 New Helper', cls: 'new' });
+    if (profile.rating >= 4.8) badges.push({ label: '⭐ Top Rated', cls: 'top' });
+    const resp = profile.tasks_completed > 0 ? Math.floor(Math.random() * 8) + 2 : null;
+    if (resp && resp <= 5) badges.push({ label: `⚡ Responds in ${resp} min`, cls: 'fast' });
+    return badges;
+  }
+
+  function renderBadges(badges, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = badges.map(b => `<span class="badge-chip ${b.cls}">${b.label}</span>`).join('');
+  }
+
+  // ─── HELPER PROFILE MODAL ───
+  async function openHelperModal(userId) {
+    const { data: profile } = await sb.from('users').select('*').eq('id', userId).single();
+    if (!profile) return;
+
+    const initial = (profile.name || '?')[0].toUpperCase();
+    document.getElementById('modal-avatar').textContent = initial;
+    document.getElementById('modal-name').textContent = profile.name || 'Helper';
+    document.getElementById('modal-role').textContent = `⚡ Kama Helper · ${profile.city || ''}`;
+    document.getElementById('modal-rating').textContent = profile.rating > 0 ? profile.rating.toFixed(1) + '★' : '—';
+    document.getElementById('modal-tasks').textContent = profile.tasks_completed || 0;
+    document.getElementById('modal-rank').textContent = profile.rank ? profile.rank.charAt(0).toUpperCase() + profile.rank.slice(1) : '—';
+
+    renderBadges(getHelperBadges(profile), 'modal-badges');
+
+    document.getElementById('modal-bio').textContent = profile.bio || `${profile.name} is a verified Kama helper based in ${profile.city || 'Israel'}. Ready to help with any task!`;
+
+    // Load reviews
+    const { data: reviews } = await sb.from('reviews').select('*, users!reviewer_id(name)').eq('reviewee_id', userId).order('created_at', { ascending: false }).limit(5);
+    const reviewEl = document.getElementById('modal-reviews');
+    if (!reviews || reviews.length === 0) {
+      reviewEl.innerHTML = '<div style="font-size:14px; color:var(--mid); text-align:center; padding:16px;">No reviews yet</div>';
+    } else {
+      reviewEl.innerHTML = reviews.map(r => `
+        <div class="review-feed-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:13px; font-weight:700;">${r.users?.name || 'Anonymous'}</div>
+            <div class="review-stars">${'⭐'.repeat(r.rating)}</div>
+          </div>
+          <div class="review-text">${r.comment || ''}</div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('helper-modal').classList.add('show');
+  }
+
+  function closeHelperModal() {
+    document.getElementById('helper-modal').classList.remove('show');
+  }
+
+  // ─── COMMUNITY FEED ───
+  let communityFilter = 'all';
+
+  function filterReviews(el, val) {
+    document.querySelectorAll('#page-community .fchip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    communityFilter = val;
+    loadCommunity();
+  }
+
+  async function loadCommunity() {
+    const el = document.getElementById('community-list');
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading reviews...</div>';
+
+    let query = sb.from('reviews')
+      .select('*, reviewer:users!reviewer_id(name, city), reviewee:users!reviewee_id(name), task:tasks(category, title)')
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (communityFilter === '5') query = query.eq('rating', 5);
+    else if (communityFilter === '4') query = query.gte('rating', 4);
+    else if (['Cleaning','Pest Control','Pets'].includes(communityFilter)) {
+      // filter by task category - do client side
+    }
+
+    const { data: reviews } = await query;
+
+    if (!reviews || reviews.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">⭐</div><div class="empty-title">No reviews yet</div><div class="empty-sub">Be the first to complete a task!</div></div>';
+      return;
+    }
+
+    let filtered = reviews;
+    if (['Cleaning','Pest Control','Pets'].includes(communityFilter)) {
+      filtered = reviews.filter(r => r.task?.category === communityFilter);
+    }
+
+    if (filtered.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No reviews found</div><div class="empty-sub">Try a different filter</div></div>';
+      return;
+    }
+
+    el.innerHTML = filtered.map(r => `
+      <div class="review-feed-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; margin-bottom:2px;">${r.reviewer?.name || 'Anonymous'} → ${r.reviewee?.name || 'Helper'}</div>
+            <div style="font-size:11px; color:var(--mid);">${r.task?.category || ''} · ${r.reviewer?.city || ''}</div>
+          </div>
+          <div class="review-stars">${'⭐'.repeat(r.rating)}</div>
+        </div>
+        ${r.comment ? `<div class="review-text">"${r.comment}"</div>` : ''}
+        <div class="review-meta">
+          <span>${r.task?.title ? r.task.title.substring(0,40) + '...' : ''}</span>
+          <span>${new Date(r.created_at).toLocaleDateString()}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ─── PROFILE EDIT ───
+  function toggleEditProfile() {
+    const view = document.getElementById('profile-view');
+    const edit = document.getElementById('profile-edit');
+    const btn = document.getElementById('edit-profile-btn');
+    const isEditing = edit.style.display === 'block';
+    if (isEditing) {
+      view.style.display = 'block';
+      edit.style.display = 'none';
+      btn.textContent = '✏️ Edit';
+    } else {
+      view.style.display = 'none';
+      edit.style.display = 'block';
+      btn.textContent = '✕ Cancel';
+      // Pre-fill edit fields
+      document.getElementById('edit-name').value = currentProfile?.name || '';
+      document.getElementById('edit-phone').value = currentProfile?.phone || '';
+      document.getElementById('edit-role').value = currentProfile?.role || 'poster';
+      // Pre-fill district/city
+      if (currentProfile?.city) {
+        for (const [district, cities] of Object.entries(cityData)) {
+          if (cities.includes(currentProfile.city)) {
+            document.getElementById('edit-district').value = district;
+            updateEditCities();
+            setTimeout(() => { document.getElementById('edit-city').value = currentProfile.city; }, 100);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  function updateEditCities() {
+    const district = document.getElementById('edit-district').value;
+    const citySelect = document.getElementById('edit-city');
+    citySelect.disabled = false;
+    citySelect.innerHTML = '<option value="" disabled selected>Select city...</option>';
+    if (cityData[district]) {
+      cityData[district].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city; opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+    }
+  }
+
+  async function saveProfile() {
+    const name = document.getElementById('edit-name').value.trim();
+    const phone = document.getElementById('edit-phone').value.trim();
+    const city = document.getElementById('edit-city').value;
+    const role = document.getElementById('edit-role').value;
+    if (!name) return showToast('Name is required', 'error');
+    const { error } = await sb.from('users').update({ name, phone, city, role }).eq('id', currentUser.id);
+    if (error) return showToast('Error saving', 'error');
+    await loadProfile();
+    toggleEditProfile();
+    showToast('Profile updated! ✅', 'success');
+  }
+
+  // ─── CITY DATA ───
+  const cityData = {
+    'Tel Aviv District': [
+      'Tel Aviv-Yafo', 'Bat Yam', 'Holon', 'Bnei Brak', 'Givatayim',
+      'Herzliya', 'Kiryat Ono', 'Or Yehuda', 'Ramat Gan', 'Ramat HaSharon'
+    ],
+    'Central District': [
+      'Rishon LeZion', 'Petah Tikva', 'Rehovot', 'Netanya', "Ra'anana",
+      'Kfar Saba', 'Hod HaSharon', 'Rosh HaAyin', 'Lod', 'Ramla',
+      'Nes Ziona', 'Yehud', 'Shoham', "Modi'in", 'Kiryat Gat',
+      'Givat Shmuel', 'Bnei Dror', 'Kfar Yona'
+    ],
+    'Jerusalem District': [
+      'Jerusalem', 'Beit Shemesh', "Ma'ale Adumim", "Givat Ze'ev",
+      'Beitar Illit', 'Mevaseret Zion'
+    ],
+    'Haifa District': [
+      'Haifa', 'Kiryat Ata', 'Kiryat Bialik', 'Kiryat Motzkin',
+      'Kiryat Yam', 'Acre', 'Hadera', 'Tirat Carmel', 'Nesher',
+      'Yokneam', 'Zichron Yaakov'
+    ],
+    'Northern District': [
+      'Nazareth', 'Afula', 'Tiberias', 'Nahariya', 'Karmiel',
+      'Safed', 'Migdal HaEmek', 'Kiryat Shmona', 'Shlomi',
+      'Nof HaGalil', 'Eilabun'
+    ],
+    'Southern District': [
+      'Beer Sheva', 'Ashdod', 'Ashkelon', 'Eilat', 'Netivot',
+      'Ofakim', 'Dimona', 'Arad', 'Sderot', 'Kiryat Gat',
+      'Kiryat Malachi', 'Gedera'
+    ]
+  };
+
+  function updateCities() {
+    const region = document.getElementById('signup-region').value;
+    const citySelect = document.getElementById('signup-city');
+    citySelect.disabled = false;
+    citySelect.innerHTML = '<option value="" disabled selected>Select city...</option>';
+    if (cityData[region]) {
+      cityData[region].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+    }
+  }
+
+  // Also add region/city to post task location
+  // ─── DISPUTE ───
+  let disputeTaskId = null;
+  function openDispute(taskId) { disputeTaskId = taskId; document.getElementById('dispute-modal').classList.add('show'); }
+  function closeDispute() { document.getElementById('dispute-modal').classList.remove('show'); disputeTaskId = null; }
+  async function submitDispute() {
+    const type = document.getElementById('dispute-type').value;
+    const desc = document.getElementById('dispute-desc').value.trim();
+    if (!desc) return showToast('Please describe the issue', 'error');
+    if (disputeTaskId) {
+      await sb.from('messages').insert({ task_id: disputeTaskId, sender_id: currentUser.id, content: '[DISPUTE] ' + type + ': ' + desc });
+    }
+    closeDispute();
+    showToast('Report submitted. We will review within 24h', 'success');
+    showNotification('Report submitted', 'Our team will review within 24 hours');
+  }
+
+  // ─── QUOTE ───
+  function openQuote() { document.getElementById('quote-modal').classList.add('show'); }
+  function closeQuote() { document.getElementById('quote-modal').classList.remove('show'); }
+  async function submitQuote() {
+    const title = document.getElementById('quote-title').value.trim();
+    const desc = document.getElementById('quote-desc').value.trim();
+    const cat = document.getElementById('quote-cat').value;
+    const budget = document.getElementById('quote-budget').value;
+    const location = document.getElementById('quote-location').value.trim();
+    if (!title || !location) return showToast('Please fill in title and location', 'error');
+    const { error } = await sb.from('tasks').insert({
+      poster_id: currentUser.id,
+      title: '[QUOTE] ' + title,
+      description: desc + (budget ? ' (Budget: up to ₪' + budget + ')' : ''),
+      category: cat,
+      price: parseFloat(budget) || 0,
+      urgency: 'Flexible',
+      location,
+      status: 'live'
+    });
+    if (error) return showToast('Error submitting', 'error');
+    closeQuote();
+    showToast('Quote request sent! Helpers will respond soon', 'success');
+    goToPage('mytasks');
+  }
+
+  // ─── CHAT ───
+  let currentTaskId = null;
+  let currentOtherId = null;
+  let chatSubscription = null;
+
+  async function openChat(taskId, otherId, otherName, taskTitle) {
+    currentTaskId = taskId;
+    currentOtherId = otherId;
+
+    document.getElementById('chat-other-name').textContent = otherName;
+    document.getElementById('chat-other-avatar').textContent = (otherName || '?')[0].toUpperCase();
+    document.getElementById('chat-task-label').textContent = taskTitle || 'Task chat';
+    document.getElementById('chat-screen').classList.add('show');
+    document.getElementById('chat-messages').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+    await loadMessages();
+    subscribeToMessages();
+  }
+
+  function closeChat() {
+    document.getElementById('chat-screen').classList.remove('show');
+    if (chatSubscription) { chatSubscription.unsubscribe(); chatSubscription = null; }
+    currentTaskId = null; currentOtherId = null;
+  }
+
+  async function loadMessages() {
+    const { data: msgs } = await sb.from('messages')
+      .select('*, users!sender_id(name)')
+      .eq('task_id', currentTaskId)
+      .order('created_at', { ascending: true });
+
+    renderMessages(msgs || []);
+  }
+
+  function renderMessages(msgs) {
+    const el = document.getElementById('chat-messages');
+    if (msgs.length === 0) {
+      el.innerHTML = '<div style="text-align:center; color:var(--mid); font-size:14px; padding:40px 0;">No messages yet. Say hi! 👋</div>';
+      return;
+    }
+
+    el.innerHTML = msgs.map(m => {
+      const isMe = m.sender_id === currentUser.id;
+      const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="msg-row ${isMe ? 'me' : 'them'}">
+          ${!isMe ? `<div class="msg-avatar-tiny">${(m.users?.name || '?')[0].toUpperCase()}</div>` : ''}
+          <div class="bubble-wrap" style="display:flex; flex-direction:column; max-width:75%; gap:2px;">
+            <div class="bubble ${isMe ? 'me' : 'them'}">${m.content}</div>
+            <div class="msg-time">${time}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function subscribeToMessages() {
+    if (chatSubscription) chatSubscription.unsubscribe();
+    chatSubscription = sb.channel('messages-' + currentTaskId)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `task_id=eq.${currentTaskId}`
+      }, (payload) => {
+        loadMessages();
+        if (payload.new.sender_id !== currentUser.id) {
+          showNotification('💬 New message', payload.new.content?.substring(0, 60));
+        }
+      })
+      .subscribe();
+  }
+
+  async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !currentTaskId) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('chat-send').disabled = true;
+
+    await sb.from('messages').insert({
+      task_id: currentTaskId,
+      sender_id: currentUser.id,
+      content: text
+    });
+
+    await loadMessages();
+  }
+
+  function autoResizeChat(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  }
+
+  function toggleChatSend() {
+    const val = document.getElementById('chat-input').value.trim();
+    document.getElementById('chat-send').disabled = !val;
+  }
+
+  function handleChatKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  }
+
+  // ─── NOTIFICATIONS ───
+  let notifTimeout = null;
+  let notifAction = null;
+
+  function showNotification(title, body, action) {
+    const toast = document.getElementById('notif-toast');
+    document.getElementById('notif-title').textContent = title;
+    document.getElementById('notif-body').textContent = body || '';
+    notifAction = action || null;
+    toast.classList.add('show');
+    if (notifTimeout) clearTimeout(notifTimeout);
+    notifTimeout = setTimeout(() => toast.classList.remove('show'), 4000);
+
+    // Browser notification if permitted
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body: body || '', icon: '/favicon.ico' });
+    }
+  }
+
+  function handleNotifClick() {
+    document.getElementById('notif-toast').classList.remove('show');
+    if (notifAction) notifAction();
+  }
+
+  async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+  }
+
+  // Subscribe to task updates for notifications
+  function subscribeToTaskUpdates() {
+    if (!currentUser) return;
+    sb.channel('task-updates-' + currentUser.id)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tasks',
+        filter: `poster_id=eq.${currentUser.id}`
+      }, (payload) => {
+        const t = payload.new;
+        if (t.status === 'matched') {
+          showNotification('⚡ Helper found!', 'Someone accepted your task', () => goToPage('mytasks'));
+          loadHomeActivity();
+        } else if (t.status === 'completed') {
+          showNotification('✅ Task complete!', 'Confirm to release payment', () => goToPage('mytasks'));
+          loadHomeActivity();
+        }
+      })
+      .subscribe();
+  }
+
+  // ─── START ───
+  // Set min date to today
+  const dateInput = document.getElementById('task-date');
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
+  }
+  init();
+</script>
+
+</body>
+</html>
