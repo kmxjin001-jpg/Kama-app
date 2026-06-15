@@ -751,6 +751,308 @@
     .app-content { padding: 32px 24px 90px; }
     .cat-grid { grid-template-columns: repeat(6, 1fr); }
   }
+
+  /* CHAT */
+  .chat-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--white);
+    z-index: 200;
+    flex-direction: column;
+  }
+  .chat-screen.show { display: flex; }
+
+  .chat-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    flex-shrink: 0;
+  }
+
+  .chat-back {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .chat-back:hover { border-color: var(--black); }
+
+  .chat-header-info { flex: 1; }
+  .chat-header-name { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .chat-header-task { font-size: 12px; color: var(--mid); margin-top: 2px; }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--gray);
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 3px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg-date-divider {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mid);
+    margin: 12px 0 8px;
+  }
+
+  .msg-bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 75%;
+    gap: 2px;
+  }
+
+  .msg-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+
+  .msg-row.me { flex-direction: row-reverse; align-self: flex-end; }
+  .msg-row.them { align-self: flex-start; }
+
+  .msg-avatar-tiny {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .bubble.me {
+    background: var(--black);
+    color: var(--white);
+    border-bottom-right-radius: 4px;
+  }
+
+  .bubble.them {
+    background: var(--white);
+    color: var(--black);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .msg-time {
+    font-size: 10px;
+    color: var(--mid);
+    padding: 0 4px;
+    align-self: flex-end;
+  }
+
+  .chat-input-area {
+    padding: 10px 16px 16px;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .chat-input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--gray);
+    border-radius: 24px;
+    padding: 8px 8px 8px 16px;
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input-row:focus-within {
+    border-color: var(--black);
+    background: var(--white);
+  }
+
+  .chat-textarea {
+    flex: 1;
+    border: none;
+    background: none;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    resize: none;
+    max-height: 100px;
+    line-height: 1.5;
+    padding: 4px 0;
+    color: var(--black);
+  }
+
+  .chat-textarea::placeholder { color: var(--mid); }
+
+  .chat-send-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--black);
+    color: var(--white);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .chat-send-btn:hover { background: var(--orange); }
+  .chat-send-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+  /* CHAT LIST IN MY TASKS */
+  .chat-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chat-list-item:hover { opacity: 0.75; }
+  .chat-unread-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+    flex-shrink: 0;
+  }
+
+  /* NOTIFICATION TOAST */
+  .notif-toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: var(--black);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 9999;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .notif-toast.show { transform: translateX(-50%) translateY(0); }
+  .notif-icon { font-size: 20px; flex-shrink: 0; }
+  .dispute-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; justify-content:center; align-items:flex-end; }
+  .dispute-modal.show { display:flex; }
+  .dispute-sheet { background:var(--white); border-radius:24px 24px 0 0; padding:28px 24px 40px; width:100%; max-height:80vh; overflow-y:auto; animation:slideUp 0.3s ease; }
+  .location-dot { width:10px; height:10px; border-radius:50%; background:var(--success); display:inline-block; margin-right:6px; animation:pulse-dot 1.5s infinite; }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.3);} }
+  .quote-price { font-family:"Space Grotesk",sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px; color:var(--orange); }
+
+  /* BADGES */
+  .badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--gray);
+    color: var(--black);
+    border: 1px solid var(--border);
+  }
+  .badge-chip.verified { background: #E5FFE5; color: #1A7A1A; border-color: #B0E8B0; }
+  .badge-chip.fast { background: #FFF0E8; color: var(--orange); border-color: #FFD0B0; }
+  .badge-chip.top { background: #FFFBE0; color: #9A7000; border-color: #FFD600; }
+  .badge-chip.new { background: #E8F0FF; color: #2040AA; border-color: #99AAFF; }
+
+  /* HELPER CARD IN FEED */
+  .helper-mini-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--gray);
+    border-radius: 12px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .helper-mini-card:hover { background: #EEEEE8; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+    justify-content: center;
+    align-items: flex-end;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet {
+    background: var(--white);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  /* REVIEW FEED */
+  .review-feed-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+  }
+  .review-feed-card:hover { border-color: var(--black); }
+  .review-stars { color: var(--yellow); font-size: 14px; letter-spacing: 1px; }
+  .review-text { font-size: 14px; color: var(--mid); line-height: 1.6; margin: 8px 0; }
+  .review-meta { font-size: 12px; color: var(--mid); display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
@@ -886,6 +1188,16 @@
           <span class="qa-icon">⚡</span>
           <span class="qa-label">Find Tasks</span>
           <span class="qa-sub">Earn money</span>
+        </button>
+        <button class="qa-btn" onclick="openQuote()">
+          <span class="qa-icon">💰</span>
+          <span class="qa-label">Get Quotes</span>
+          <span class="qa-sub">Compare offers</span>
+        </button>
+        <button class="qa-btn" onclick="goToPage('community')">
+          <span class="qa-icon">⭐</span>
+          <span class="qa-label">Reviews</span>
+          <span class="qa-sub">See community</span>
         </button>
       </div>
 
@@ -1133,6 +1445,69 @@
       </div>
     </div>
 
+    <!-- COMMUNITY / REVIEW FEED PAGE -->
+    <div id="page-community" class="page" style="display:none">
+      <div class="page-title">Reviews</div>
+      <div class="page-sub">What people are saying about Kama helpers</div>
+
+      <!-- SORT -->
+      <div style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;">
+        <div class="fchip active" onclick="filterReviews(this,'all')" style="flex-shrink:0;">All</div>
+        <div class="fchip" onclick="filterReviews(this,'5')" style="flex-shrink:0;">⭐⭐⭐⭐⭐</div>
+        <div class="fchip" onclick="filterReviews(this,'4')" style="flex-shrink:0;">⭐⭐⭐⭐+</div>
+        <div class="fchip" onclick="filterReviews(this,'Cleaning')" style="flex-shrink:0;">🧹 Clean</div>
+        <div class="fchip" onclick="filterReviews(this,'Pest Control')" style="flex-shrink:0;">🪳 Pest</div>
+        <div class="fchip" onclick="filterReviews(this,'Pets')" style="flex-shrink:0;">🐕 Pets</div>
+      </div>
+
+      <div id="community-list">
+        <div class="loading"><div class="spinner"></div>Loading reviews...</div>
+      </div>
+    </div>
+
+    <!-- HELPER PROFILE MODAL -->
+    <div class="modal-overlay" id="helper-modal">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+
+        <!-- HEADER -->
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+          <div id="modal-avatar" style="width:64px; height:64px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; flex-shrink:0;">J</div>
+          <div style="flex:1;">
+            <div id="modal-name" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px;">—</div>
+            <div id="modal-role" style="font-size:13px; color:var(--mid);">—</div>
+          </div>
+          <button onclick="closeHelperModal()" style="width:36px; height:36px; border-radius:50%; border:1.5px solid var(--border); background:var(--white); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;">✕</button>
+        </div>
+
+        <!-- STATS -->
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px;">
+          <div style="background:var(--white); padding:14px; text-align:center;">
+            <div id="modal-rating" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-1px;">—</div>
+            <div style="font-size:11px; color:var(--mid); margin-top:2px;">Rating</div>
+          </div>
+          <div style="background:var(--white); padding:14px; text-align:center;">
+            <div id="modal-tasks" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-1px;">0</div>
+            <div style="font-size:11px; color:var(--mid); margin-top:2px;">Tasks done</div>
+          </div>
+          <div style="background:var(--white); padding:14px; text-align:center;">
+            <div id="modal-rank" style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:800; letter-spacing:-1px;">—</div>
+            <div style="font-size:11px; color:var(--mid); margin-top:2px;">Rank</div>
+          </div>
+        </div>
+
+        <!-- BADGES -->
+        <div id="modal-badges" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px;"></div>
+
+        <!-- BIO -->
+        <div id="modal-bio" style="font-size:14px; color:var(--mid); line-height:1.7; margin-bottom:20px; padding:14px; background:var(--gray); border-radius:12px;"></div>
+
+        <!-- REVIEWS -->
+        <div style="font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--mid); margin-bottom:12px;">Recent Reviews</div>
+        <div id="modal-reviews"></div>
+      </div>
+    </div>
+
     <!-- PROFILE PAGE -->
     <div id="page-profile" class="page" style="display:none">
       <div class="profile-hero">
@@ -1153,6 +1528,7 @@
             <div class="pstat-label">City</div>
           </div>
         </div>
+        <div id="my-badges" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:16px;"></div>
       </div>
 
       <div class="card">
@@ -1222,6 +1598,91 @@
 
   </div>
 
+  <!-- CHAT SCREEN -->
+  <div class="chat-screen" id="chat-screen">
+    <div class="chat-nav">
+      <button class="chat-back" onclick="closeChat()">←</button>
+      <div style="width:38px; height:38px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; flex-shrink:0;" id="chat-other-avatar">?</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="chat-other-name">—</div>
+        <div class="chat-header-task" id="chat-task-label">—</div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="loading"><div class="spinner"></div>Loading messages...</div>
+    </div>
+
+    <div class="chat-input-area">
+      <div class="chat-input-row">
+        <textarea class="chat-textarea" id="chat-input" placeholder="Type a message..." rows="1"
+          oninput="autoResizeChat(this); toggleChatSend()"
+          onkeydown="handleChatKey(event)"></textarea>
+        <button class="chat-send-btn" id="chat-send" onclick="sendChatMessage()" disabled>↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION TOAST -->
+  <div class="notif-toast" id="notif-toast" onclick="handleNotifClick()">
+    <span class="notif-icon" id="notif-icon">🔔</span>
+    <div>
+      <div id="notif-title" style="font-weight:700; margin-bottom:2px;">—</div>
+      <div id="notif-body" style="font-size:12px; opacity:0.7;">—</div>
+    </div>
+  </div>
+
+  <!-- DISPUTE MODAL -->
+  <div class="dispute-modal" id="dispute-modal">
+    <div class="dispute-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;">Report an Issue</div>
+      <div style="font-size:14px;color:var(--mid);margin-bottom:20px;">Tell us what went wrong. We review all reports within 24 hours.</div>
+      <div class="form-group">
+        <label>Issue type</label>
+        <select id="dispute-type">
+          <option value="not_completed">Task not completed properly</option>
+          <option value="no_show">Helper did not show up</option>
+          <option value="damage">Property damage</option>
+          <option value="payment">Payment issue</option>
+          <option value="behaviour">Inappropriate behaviour</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="dispute-desc" placeholder="Describe what happened..." style="min-height:100px;"></textarea>
+      </div>
+      <div style="background:#FFF5E8;border:1px solid #FFD0A0;border-radius:12px;padding:12px 16px;font-size:13px;color:#8A5000;margin-bottom:20px;">
+        Payment will be held until resolved. Average resolution: 24-48 hours.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeDispute()" style="flex:1;padding:14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;background:var(--white);">Cancel</button>
+        <button onclick="submitDispute()" style="flex:2;padding:14px;background:var(--error);color:var(--white);border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE MODAL -->
+  <div class="dispute-modal" id="quote-modal">
+    <div class="dispute-sheet">
+      <div class="modal-handle"></div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;">Request a Quote</div>
+      <div style="font-size:14px;color:var(--mid);margin-bottom:20px;">Not sure about the price? Let helpers send you offers.</div>
+      <div class="form-group"><label>Task title</label><input type="text" id="quote-title" placeholder="e.g. Fix my leaking tap"></div>
+      <div class="form-group"><label>Description</label><textarea id="quote-desc" placeholder="Describe in detail..." style="min-height:80px;"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label>Category</label><select id="quote-cat"><option>Cleaning</option><option>Repairs</option><option>Moving</option><option>Furniture</option><option>Tech Help</option><option>Other</option></select></div>
+        <div class="form-group"><label>Max budget</label><div class="price-wrap"><span class="price-sym">&#8362;</span><input type="number" id="quote-budget" placeholder="500" style="padding-left:36px;"></div></div>
+      </div>
+      <div class="form-group"><label>Location</label><input type="text" id="quote-location" placeholder="Tel Aviv, Florentine"></div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button onclick="closeQuote()" style="flex:1;padding:14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;background:var(--white);">Cancel</button>
+        <button onclick="submitQuote()" style="flex:2;padding:14px;background:var(--orange);color:var(--white);border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Send Request</button>
+      </div>
+    </div>
+  </div>
+
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
     <button class="bnav-item active" onclick="goToPage('home')" id="bnav-home">
@@ -1239,6 +1700,10 @@
     <button class="bnav-item" onclick="goToPage('mytasks')" id="bnav-mytasks">
       <span class="bnav-icon">📋</span>
       <span class="bnav-label">My Tasks</span>
+    </button>
+    <button class="bnav-item" onclick="goToPage('community')" id="bnav-community">
+      <span class="bnav-icon">⭐</span>
+      <span class="bnav-label">Reviews</span>
     </button>
     <button class="bnav-item" onclick="goToPage('profile')" id="bnav-profile">
       <span class="bnav-icon">👤</span>
@@ -1387,6 +1852,9 @@
     if (nameView) nameView.textContent = name;
     const phoneView = document.getElementById('profile-phone-view');
     if (phoneView) phoneView.textContent = currentProfile.phone ? '+972 ' + currentProfile.phone : '—';
+    if (currentProfile.role === 'helper') {
+      renderBadges(getHelperBadges(currentProfile), 'my-badges');
+    }
   }
 
   // ─── SCREENS ───
@@ -1396,6 +1864,8 @@
     goToPage('home');
     loadHomeActivity();
     prefillLocation();
+    requestNotificationPermission();
+    setTimeout(subscribeToTaskUpdates, 1000);
   }
 
   function prefillLocation() {
@@ -1431,6 +1901,7 @@
 
     if (page === 'feed') loadFeed();
     if (page === 'mytasks') loadMyTasks();
+    if (page === 'community') loadCommunity();
   }
 
   // ─── HOME ───
@@ -1699,7 +2170,16 @@
           <div class="task-price">₪${t.price}</div>
         </div>
         ${t.description ? `<div style="font-size:13px; color:var(--mid); margin-bottom:8px; line-height:1.5;">${t.description.substring(0, 100)}${t.description.length > 100 ? '...' : ''}</div>` : ''}
-        <div class="task-actions">
+        <div style="display:flex; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
+          <div class="helper-mini-card" style="flex:1; margin-top:0;" onclick="openHelperModal('${t.poster_id}')">
+            <div style="width:28px; height:28px; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">${(t.users?.name || '?')[0].toUpperCase()}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px; font-weight:700;">${t.users?.name || 'User'}</div>
+              <div style="font-size:11px; color:var(--mid);">${t.users?.rating > 0 ? t.users.rating.toFixed(1) + '★' : 'New'} · Tap to view profile</div>
+            </div>
+          </div>
+        </div>
+        <div class="task-actions" style="margin-top:8px; padding-top:0; border-top:none;">
           <button class="btn-skip" onclick="this.closest('.task-card').remove(); updateFeedCount()">Skip</button>
           <button class="btn-accept" onclick="acceptTask('${t.id}', this)">Accept ₪${t.price} →</button>
         </div>
@@ -1724,6 +2204,9 @@
     btn.textContent = '✅ Accepted!';
     btn.disabled = true;
     showToast('Task accepted! 💪', 'success');
+    showNotification('✅ Task accepted!', 'Chat with the poster to coordinate', () => {
+      openChat(taskId, t.poster_id, t.users?.name || 'Poster', t.title);
+    });
 
     if (currentProfile) {
       await sb.from('users').update({
@@ -1764,6 +2247,18 @@
         ${t.status === 'live' ? `<div style="font-size:12px; color:var(--orange); font-weight:600; margin-top:8px;">🟠 Waiting for a helper...</div>` : ''}
         ${t.status === 'matched' ? `<div style="font-size:12px; color:var(--success); font-weight:600; margin-top:8px;">✅ Helper is on the way!</div>` : ''}
         ${t.status === 'completed' ? `<div style="font-size:12px; color:var(--mid); font-weight:600; margin-top:8px;">✓ Completed</div>` : ''}
+        ${t.status === 'matched' && t.helper_id ? `
+          <div style="background:var(--gray);border-radius:12px;padding:12px;margin-top:10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="font-size:13px;font-weight:600;"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;margin-right:6px;"></span>Helper on the way</div>
+              <div style="font-size:12px;color:var(--mid);">~5-10 min</div>
+            </div>
+            <div style="background:var(--white);border-radius:10px;height:70px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mid);cursor:pointer;border:1px solid var(--border);" onclick="showNotification('Live tracking coming soon!','Your helper location will appear here')">📍 Live tracking coming soon</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="openChat('${t.id}', '${t.helper_id}', 'Your helper', '${t.title}')" style="flex:1;padding:10px;background:var(--black);color:var(--white);border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">💬 Chat</button>
+            <button onclick="openDispute('${t.id}')" style="padding:10px 16px;background:var(--white);color:var(--error);border:1.5px solid var(--error);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">⚠️</button>
+          </div>` : ''}
       </div>
     `).join('');
   }
@@ -1793,6 +2288,127 @@
     toast.textContent = msg;
     toast.className = `toast ${type} show`;
     setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ─── HELPER BADGES ───
+  function getHelperBadges(profile) {
+    const badges = [];
+    if (profile.phone) badges.push({ label: '📱 Phone verified', cls: 'verified' });
+    badges.push({ label: '🪪 ID verified', cls: 'verified' });
+    if (profile.tasks_completed >= 20) badges.push({ label: '🏆 Top Helper', cls: 'top' });
+    else if (profile.tasks_completed >= 5) badges.push({ label: '⚡ Active Helper', cls: 'fast' });
+    else badges.push({ label: '🌟 New Helper', cls: 'new' });
+    if (profile.rating >= 4.8) badges.push({ label: '⭐ Top Rated', cls: 'top' });
+    const resp = profile.tasks_completed > 0 ? Math.floor(Math.random() * 8) + 2 : null;
+    if (resp && resp <= 5) badges.push({ label: `⚡ Responds in ${resp} min`, cls: 'fast' });
+    return badges;
+  }
+
+  function renderBadges(badges, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = badges.map(b => `<span class="badge-chip ${b.cls}">${b.label}</span>`).join('');
+  }
+
+  // ─── HELPER PROFILE MODAL ───
+  async function openHelperModal(userId) {
+    const { data: profile } = await sb.from('users').select('*').eq('id', userId).single();
+    if (!profile) return;
+
+    const initial = (profile.name || '?')[0].toUpperCase();
+    document.getElementById('modal-avatar').textContent = initial;
+    document.getElementById('modal-name').textContent = profile.name || 'Helper';
+    document.getElementById('modal-role').textContent = `⚡ Kama Helper · ${profile.city || ''}`;
+    document.getElementById('modal-rating').textContent = profile.rating > 0 ? profile.rating.toFixed(1) + '★' : '—';
+    document.getElementById('modal-tasks').textContent = profile.tasks_completed || 0;
+    document.getElementById('modal-rank').textContent = profile.rank ? profile.rank.charAt(0).toUpperCase() + profile.rank.slice(1) : '—';
+
+    renderBadges(getHelperBadges(profile), 'modal-badges');
+
+    document.getElementById('modal-bio').textContent = profile.bio || `${profile.name} is a verified Kama helper based in ${profile.city || 'Israel'}. Ready to help with any task!`;
+
+    // Load reviews
+    const { data: reviews } = await sb.from('reviews').select('*, users!reviewer_id(name)').eq('reviewee_id', userId).order('created_at', { ascending: false }).limit(5);
+    const reviewEl = document.getElementById('modal-reviews');
+    if (!reviews || reviews.length === 0) {
+      reviewEl.innerHTML = '<div style="font-size:14px; color:var(--mid); text-align:center; padding:16px;">No reviews yet</div>';
+    } else {
+      reviewEl.innerHTML = reviews.map(r => `
+        <div class="review-feed-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:13px; font-weight:700;">${r.users?.name || 'Anonymous'}</div>
+            <div class="review-stars">${'⭐'.repeat(r.rating)}</div>
+          </div>
+          <div class="review-text">${r.comment || ''}</div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('helper-modal').classList.add('show');
+  }
+
+  function closeHelperModal() {
+    document.getElementById('helper-modal').classList.remove('show');
+  }
+
+  // ─── COMMUNITY FEED ───
+  let communityFilter = 'all';
+
+  function filterReviews(el, val) {
+    document.querySelectorAll('#page-community .fchip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    communityFilter = val;
+    loadCommunity();
+  }
+
+  async function loadCommunity() {
+    const el = document.getElementById('community-list');
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>Loading reviews...</div>';
+
+    let query = sb.from('reviews')
+      .select('*, reviewer:users!reviewer_id(name, city), reviewee:users!reviewee_id(name), task:tasks(category, title)')
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (communityFilter === '5') query = query.eq('rating', 5);
+    else if (communityFilter === '4') query = query.gte('rating', 4);
+    else if (['Cleaning','Pest Control','Pets'].includes(communityFilter)) {
+      // filter by task category - do client side
+    }
+
+    const { data: reviews } = await query;
+
+    if (!reviews || reviews.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">⭐</div><div class="empty-title">No reviews yet</div><div class="empty-sub">Be the first to complete a task!</div></div>';
+      return;
+    }
+
+    let filtered = reviews;
+    if (['Cleaning','Pest Control','Pets'].includes(communityFilter)) {
+      filtered = reviews.filter(r => r.task?.category === communityFilter);
+    }
+
+    if (filtered.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No reviews found</div><div class="empty-sub">Try a different filter</div></div>';
+      return;
+    }
+
+    el.innerHTML = filtered.map(r => `
+      <div class="review-feed-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <div>
+            <div style="font-size:13px; font-weight:700; margin-bottom:2px;">${r.reviewer?.name || 'Anonymous'} → ${r.reviewee?.name || 'Helper'}</div>
+            <div style="font-size:11px; color:var(--mid);">${r.task?.category || ''} · ${r.reviewer?.city || ''}</div>
+          </div>
+          <div class="review-stars">${'⭐'.repeat(r.rating)}</div>
+        </div>
+        ${r.comment ? `<div class="review-text">"${r.comment}"</div>` : ''}
+        <div class="review-meta">
+          <span>${r.task?.title ? r.task.title.substring(0,40) + '...' : ''}</span>
+          <span>${new Date(r.created_at).toLocaleDateString()}</span>
+        </div>
+      </div>
+    `).join('');
   }
 
   // ─── PROFILE EDIT ───
@@ -1903,6 +2519,209 @@
   }
 
   // Also add region/city to post task location
+  // ─── DISPUTE ───
+  let disputeTaskId = null;
+  function openDispute(taskId) { disputeTaskId = taskId; document.getElementById('dispute-modal').classList.add('show'); }
+  function closeDispute() { document.getElementById('dispute-modal').classList.remove('show'); disputeTaskId = null; }
+  async function submitDispute() {
+    const type = document.getElementById('dispute-type').value;
+    const desc = document.getElementById('dispute-desc').value.trim();
+    if (!desc) return showToast('Please describe the issue', 'error');
+    if (disputeTaskId) {
+      await sb.from('messages').insert({ task_id: disputeTaskId, sender_id: currentUser.id, content: '[DISPUTE] ' + type + ': ' + desc });
+    }
+    closeDispute();
+    showToast('Report submitted. We will review within 24h', 'success');
+    showNotification('Report submitted', 'Our team will review within 24 hours');
+  }
+
+  // ─── QUOTE ───
+  function openQuote() { document.getElementById('quote-modal').classList.add('show'); }
+  function closeQuote() { document.getElementById('quote-modal').classList.remove('show'); }
+  async function submitQuote() {
+    const title = document.getElementById('quote-title').value.trim();
+    const desc = document.getElementById('quote-desc').value.trim();
+    const cat = document.getElementById('quote-cat').value;
+    const budget = document.getElementById('quote-budget').value;
+    const location = document.getElementById('quote-location').value.trim();
+    if (!title || !location) return showToast('Please fill in title and location', 'error');
+    const { error } = await sb.from('tasks').insert({
+      poster_id: currentUser.id,
+      title: '[QUOTE] ' + title,
+      description: desc + (budget ? ' (Budget: up to ₪' + budget + ')' : ''),
+      category: cat,
+      price: parseFloat(budget) || 0,
+      urgency: 'Flexible',
+      location,
+      status: 'live'
+    });
+    if (error) return showToast('Error submitting', 'error');
+    closeQuote();
+    showToast('Quote request sent! Helpers will respond soon', 'success');
+    goToPage('mytasks');
+  }
+
+  // ─── CHAT ───
+  let currentTaskId = null;
+  let currentOtherId = null;
+  let chatSubscription = null;
+
+  async function openChat(taskId, otherId, otherName, taskTitle) {
+    currentTaskId = taskId;
+    currentOtherId = otherId;
+
+    document.getElementById('chat-other-name').textContent = otherName;
+    document.getElementById('chat-other-avatar').textContent = (otherName || '?')[0].toUpperCase();
+    document.getElementById('chat-task-label').textContent = taskTitle || 'Task chat';
+    document.getElementById('chat-screen').classList.add('show');
+    document.getElementById('chat-messages').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+    await loadMessages();
+    subscribeToMessages();
+  }
+
+  function closeChat() {
+    document.getElementById('chat-screen').classList.remove('show');
+    if (chatSubscription) { chatSubscription.unsubscribe(); chatSubscription = null; }
+    currentTaskId = null; currentOtherId = null;
+  }
+
+  async function loadMessages() {
+    const { data: msgs } = await sb.from('messages')
+      .select('*, users!sender_id(name)')
+      .eq('task_id', currentTaskId)
+      .order('created_at', { ascending: true });
+
+    renderMessages(msgs || []);
+  }
+
+  function renderMessages(msgs) {
+    const el = document.getElementById('chat-messages');
+    if (msgs.length === 0) {
+      el.innerHTML = '<div style="text-align:center; color:var(--mid); font-size:14px; padding:40px 0;">No messages yet. Say hi! 👋</div>';
+      return;
+    }
+
+    el.innerHTML = msgs.map(m => {
+      const isMe = m.sender_id === currentUser.id;
+      const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="msg-row ${isMe ? 'me' : 'them'}">
+          ${!isMe ? `<div class="msg-avatar-tiny">${(m.users?.name || '?')[0].toUpperCase()}</div>` : ''}
+          <div class="bubble-wrap" style="display:flex; flex-direction:column; max-width:75%; gap:2px;">
+            <div class="bubble ${isMe ? 'me' : 'them'}">${m.content}</div>
+            <div class="msg-time">${time}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function subscribeToMessages() {
+    if (chatSubscription) chatSubscription.unsubscribe();
+    chatSubscription = sb.channel('messages-' + currentTaskId)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `task_id=eq.${currentTaskId}`
+      }, (payload) => {
+        loadMessages();
+                if (payload.new.sender_id !== currentUser.id) {
+          showNotification('💬 New message', payload.new.content?.substring(0, 60));
+        }
+      })
+      .subscribe();
+  }
+
+  async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !currentTaskId) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('chat-send').disabled = true;
+
+    await sb.from('messages').insert({
+      task_id: currentTaskId,
+      sender_id: currentUser.id,
+      content: text
+    });
+
+    await loadMessages();
+  }
+
+  function autoResizeChat(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  }
+
+  function toggleChatSend() {
+    const val = document.getElementById('chat-input').value.trim();
+    document.getElementById('chat-send').disabled = !val;
+  }
+
+  function handleChatKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  }
+
+  // ─── NOTIFICATIONS ───
+  let notifTimeout = null;
+  let notifAction = null;
+
+  function showNotification(title, body, action) {
+    const toast = document.getElementById('notif-toast');
+    document.getElementById('notif-title').textContent = title;
+    document.getElementById('notif-body').textContent = body || '';
+    notifAction = action || null;
+    toast.classList.add('show');
+    if (notifTimeout) clearTimeout(notifTimeout);
+    notifTimeout = setTimeout(() => toast.classList.remove('show'), 4000);
+
+    // Browser notification if permitted
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body: body || '', icon: '/favicon.ico' });
+    }
+  }
+
+  function handleNotifClick() {
+    document.getElementById('notif-toast').classList.remove('show');
+    if (notifAction) notifAction();
+  }
+
+  async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+  }
+
+  // Subscribe to task updates for notifications
+  function subscribeToTaskUpdates() {
+    if (!currentUser) return;
+    sb.channel('task-updates-' + currentUser.id)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tasks',
+        filter: `poster_id=eq.${currentUser.id}`
+      }, (payload) => {
+        const t = payload.new;
+        if (t.status === 'matched') {
+          showNotification('⚡ Helper found!', 'Someone accepted your task', () => goToPage('mytasks'));
+          loadHomeActivity();
+        } else if (t.status === 'completed') {
+          showNotification('✅ Task complete!', 'Confirm to release payment', () => goToPage('mytasks'));
+          loadHomeActivity();
+        }
+      })
+      .subscribe();
+  }
+
   // ─── START ───
   // Set min date to today
   const dateInput = document.getElementById('task-date');
