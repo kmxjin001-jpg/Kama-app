@@ -136,11 +136,34 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.success { background: var(--success); }
 
+  /* MOBILE NAV */
+  .mobile-nav {
+    display: none;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 8px 0 16px;
+    z-index: 100;
+  }
+  .mobile-nav-inner { display: flex; justify-content: space-around; }
+  .mobile-nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 12px; cursor: pointer; border: none; background: none;
+    font-family: Inter,sans-serif; color: var(--mid); transition: color 0.2s;
+  }
+  .mobile-nav-item.active { color: var(--orange); }
+  .mobile-nav-item .nav-icon { font-size: 20px; }
+  .mobile-nav-item .nav-label { font-size: 10px; font-weight: 600; }
+
   @media (max-width: 768px) {
     .admin-layout { grid-template-columns: 1fr; }
     .sidebar { display: none; }
+    .mobile-nav { display: block; }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
-    .main { padding: 20px 16px; }
+    .main { padding: 20px 16px 90px; }
+    nav { padding: 12px 16px; }
+    .nav-logo { font-size: 16px; }
   }
 </style>
 </head>
@@ -188,10 +211,10 @@
       <div class="page active" id="page-dashboard">
         <h1 style="font-family:Space Grotesk,sans-serif; font-size:28px; font-weight:800; letter-spacing:-1.5px; margin-bottom:24px;">Dashboard</h1>
         <div class="stats-row">
-          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val" id="stat-users">—</div><div class="stat-label">Total users</div></div>
-          <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-val" id="stat-tasks">—</div><div class="stat-label">Total tasks</div></div>
-          <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-val" id="stat-helpers">—</div><div class="stat-label">Helpers</div></div>
-          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" id="stat-completed">—</div><div class="stat-label">Completed</div></div>
+          <div class="stat-card" onclick="switchPage('users', document.querySelector('.sidebar-item')" style="cursor:pointer;"><div class="stat-icon">👥</div><div class="stat-val" id="stat-users">—</div><div class="stat-label">Total users</div></div>
+          <div class="stat-card" onclick="switchPage('tasks', document.querySelector('.sidebar-item'))" style="cursor:pointer;"><div class="stat-icon">📋</div><div class="stat-val" id="stat-tasks">—</div><div class="stat-label">Total tasks</div></div>
+          <div class="stat-card" style="cursor:pointer;"><div class="stat-icon">⚡</div><div class="stat-val" id="stat-helpers">—</div><div class="stat-label">Helpers</div></div>
+          <div class="stat-card" style="cursor:pointer;"><div class="stat-icon">✅</div><div class="stat-val" id="stat-completed">—</div><div class="stat-label">Completed</div></div>
         </div>
 
         <div class="table-card">
@@ -504,5 +527,34 @@
     }
   });
 </script>
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav" id="mobile-nav">
+    <div class="mobile-nav-inner">
+      <button class="mobile-nav-item active" onclick="switchPageMobile(this, 'dashboard')" id="mnav-dashboard">
+        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchPageMobile(this, 'users')" id="mnav-users">
+        <span class="nav-icon">👥</span><span class="nav-label">Users</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchPageMobile(this, 'tasks')" id="mnav-tasks">
+        <span class="nav-icon">📋</span><span class="nav-label">Tasks</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchPageMobile(this, 'disputes')" id="mnav-disputes">
+        <span class="nav-icon">⚠️</span><span class="nav-label">Reports</span>
+      </button>
+      <button class="mobile-nav-item" onclick="switchPageMobile(this, 'reviews')" id="mnav-reviews">
+        <span class="nav-icon">⭐</span><span class="nav-label">Reviews</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+  function switchPageMobile(el, page) {
+    document.querySelectorAll(".mobile-nav-item").forEach(b => b.classList.remove("active"));
+    el.classList.add("active");
+    const fakeEl = { classList: { add: () => {}, remove: () => {} } };
+    switchPage(page, fakeEl);
+  }
+  </script>
 </body>
 </html>
